@@ -10,18 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
-        /* ==========================================
-           @PROPERTY FOR ANIMATED BORDER
-           ========================================== */
         @property --border-angle {
             syntax: '<angle>';
             initial-value: 0deg;
             inherits: false;
         }
 
-        /* ==========================================
-           TOKENS
-           ========================================== */
         :root {
             --bg-deep: #0a0e13;
             --bg-card: #151d27;
@@ -38,9 +32,6 @@
             --radius-sm: 4px;
         }
 
-        /* ==========================================
-           RESET
-           ========================================== */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         ::-webkit-scrollbar { width: 8px; }
@@ -48,12 +39,8 @@
         ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--hub-accent); }
         * { scrollbar-width: thin; scrollbar-color: var(--border-subtle) var(--bg-deep); }
-
         ::selection { background: rgba(74, 124, 89, 0.4); color: #fff; }
 
-        /* ==========================================
-           BODY & BACKGROUND
-           ========================================== */
         body {
             background-color: var(--bg-deep);
             color: var(--text-primary);
@@ -89,45 +76,65 @@
         }
 
         /* ==========================================
-           PARTICLE CANVAS
+           PARTICLE CANVAS (scrolls with page)
            ========================================== */
         #particle-canvas {
-            position: fixed;
-            inset: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
             z-index: 0;
             pointer-events: none;
         }
 
         /* ==========================================
-           SCAN LINE (enhanced visibility)
+           SCAN LINE (very visible trailing sweep)
            ========================================== */
         .scan-line {
             position: fixed;
-            left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent 2%, var(--hub-accent) 20%, var(--hub-accent) 80%, transparent 98%);
-            opacity: 0;
-            z-index: 50;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(74, 124, 89, 0.02) 25%,
+                rgba(74, 124, 89, 0.05) 55%,
+                rgba(74, 124, 89, 0.12) 80%,
+                rgba(74, 124, 89, 0.45) 94%,
+                rgba(74, 124, 89, 0.75) 100%
+            );
+            z-index: 90;
             pointer-events: none;
-            animation: scanSweep 5s ease-in-out infinite;
+            opacity: 0;
+            animation: scanSweep 5.5s ease-in-out infinite;
+        }
+
+        /* Bright leading edge line */
+        .scan-line::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--hub-accent);
             box-shadow:
-                0 0 12px var(--hub-accent-glow),
-                0 0 40px rgba(74, 124, 89, 0.15),
-                0 -4px 20px rgba(74, 124, 89, 0.08),
-                0 4px 20px rgba(74, 124, 89, 0.08);
+                0 0 10px var(--hub-accent),
+                0 0 30px var(--hub-accent-glow),
+                0 0 60px rgba(74, 124, 89, 0.15),
+                0 -6px 25px rgba(74, 124, 89, 0.1),
+                0 6px 25px rgba(74, 124, 89, 0.1);
         }
 
         @keyframes scanSweep {
-            0% { top: -2px; opacity: 0; }
-            2% { opacity: 0.55; }
+            0% { top: -60px; opacity: 0; }
+            3% { opacity: 1; }
             50% { top: 100vh; }
-            98% { opacity: 0.55; }
+            97% { opacity: 1; }
             100% { top: 100vh; opacity: 0; }
         }
 
-        /* ==========================================
-           VIGNETTE
-           ========================================== */
         .vignette {
             position: fixed;
             inset: 0;
@@ -164,11 +171,7 @@
             transform: translateY(-10px);
             transition: opacity 0.5s ease, transform 0.5s ease;
         }
-
-        .status-bar.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .status-bar.visible { opacity: 1; transform: translateY(0); }
 
         .status-left { display: flex; align-items: center; gap: 1.5rem; }
         .status-indicator { display: flex; align-items: center; gap: 0.4rem; }
@@ -205,11 +208,7 @@
             transform: translateY(-10px);
             transition: opacity 0.6s ease, transform 0.6s ease;
         }
-
-        .hub-header.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .hub-header.visible { opacity: 1; transform: translateY(0); }
 
         .hub-title {
             font-family: 'Rajdhani', sans-serif;
@@ -223,8 +222,6 @@
             position: relative;
             transition: transform 0.05s ease, text-shadow 0.05s ease;
         }
-
-        /* Glitch underline bar */
         .hub-title::after {
             content: '';
             position: absolute;
@@ -256,12 +253,11 @@
             perspective: 1200px;
         }
 
-        /* Focus dim: only when .has-focus class is present (set by JS) */
         .card-grid.has-focus .skill-card {
-            opacity: 0.35;
-            filter: brightness(0.5) saturate(0.3);
+            opacity: 0.3;
+            filter: brightness(0.45) saturate(0.2);
             transform: scale(0.97);
-            transition: opacity 0.4s ease, filter 0.4s ease, transform 0.4s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            transition: opacity 0.4s ease, filter 0.4s ease, transform 0.4s ease;
         }
         .card-grid.has-focus .skill-card:hover {
             opacity: 1;
@@ -270,7 +266,7 @@
         }
 
         /* ==========================================
-           MTG CARD — OUTER SHELL
+           MTG CARD — all transforms live here
            ========================================== */
         .skill-card {
             --accent: #4a7c59;
@@ -286,37 +282,56 @@
             text-decoration: none;
             color: inherit;
             cursor: pointer;
+            transform-style: preserve-3d;
 
-            /* Entrance: hidden by default, JS reveals */
+            /* Hidden until JS triggers deal */
             opacity: 0;
-            transform: translateY(60px) scale(0.85);
+            filter: blur(8px);
+            transform: translateY(150px) scale(0.4) rotateX(45deg);
         }
 
         .skill-card.dealt {
-            animation: cardDeal 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            animation: cardDeal 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
         .skill-card.settled {
             opacity: 1;
+            filter: none;
             transform: none;
             animation: none;
-            transition: transform 0.4s ease, opacity 0.4s ease, filter 0.4s ease, box-shadow 0.3s ease;
+            transition: transform 0.12s ease-out, opacity 0.4s ease, filter 0.4s ease;
         }
 
         @keyframes cardDeal {
-            0% { opacity: 0; transform: translateY(80px) scale(0.8) rotateX(25deg); }
-            60% { opacity: 1; transform: translateY(-6px) scale(1.03) rotateX(-4deg); }
-            80% { transform: translateY(3px) scale(0.98) rotateX(1deg); }
-            100% { opacity: 1; transform: translateY(0) scale(1) rotateX(0); }
+            0% {
+                opacity: 0;
+                filter: blur(8px);
+                transform: translateY(150px) scale(0.4) rotateX(45deg);
+            }
+            35% {
+                opacity: 0.85;
+                filter: blur(0px);
+            }
+            65% {
+                opacity: 1;
+                transform: translateY(-12px) scale(1.06) rotateX(-6deg);
+            }
+            82% {
+                transform: translateY(5px) scale(0.97) rotateX(2deg);
+            }
+            100% {
+                opacity: 1;
+                filter: none;
+                transform: translateY(0) scale(1) rotateX(0);
+            }
         }
 
-        /* Hover glow (static fallback for no @property support) */
         .skill-card.settled:hover {
             box-shadow: 0 12px 35px rgba(0,0,0,0.5), 0 0 25px var(--accent-dim);
         }
 
         /* ==========================================
-           ROTATING BORDER (::before)
+           ROTATING BORDER
            ========================================== */
         .skill-card::before {
             content: '';
@@ -325,10 +340,10 @@
             background: conic-gradient(
                 from var(--border-angle),
                 transparent 0%,
-                transparent 25%,
-                var(--accent) 40%,
+                transparent 20%,
+                var(--accent) 38%,
                 var(--accent) 50%,
-                transparent 65%,
+                transparent 62%,
                 transparent 100%
             );
             border-radius: calc(var(--radius-card) + 3px);
@@ -338,20 +353,11 @@
             animation: rotateBorder 2.5s linear infinite;
             pointer-events: none;
         }
+        .skill-card.settled:hover::before { opacity: 1; }
 
-        .skill-card.settled:hover::before {
-            opacity: 1;
-        }
+        @keyframes rotateBorder { to { --border-angle: 360deg; } }
 
-        @keyframes rotateBorder {
-            to { --border-angle: 360deg; }
-        }
-
-        /* ==========================================
-           BACKGROUND MASK (::after)
-           Covers the inner area so only the border
-           gap shows the rotating gradient.
-           ========================================== */
+        /* Background mask */
         .skill-card::after {
             content: '';
             position: absolute;
@@ -363,7 +369,7 @@
         }
 
         /* ==========================================
-           CARD INNER (3D transform target)
+           CARD INNER (just layout, no transforms)
            ========================================== */
         .card-inner {
             position: relative;
@@ -371,9 +377,6 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            transform-style: preserve-3d;
-            transition: transform 0.12s ease-out;
-            will-change: transform;
         }
 
         /* ==========================================
@@ -402,7 +405,6 @@
             border-bottom: 1px solid var(--border-dim);
             overflow: hidden;
         }
-
         .card-art::after {
             content: "";
             position: absolute;
@@ -429,7 +431,6 @@
             font-weight: 500; color: var(--border-subtle);
             letter-spacing: 0.1em; text-transform: uppercase;
         }
-
         .card-art-glow {
             position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
@@ -469,7 +470,7 @@
             font-weight: 500; color: var(--text-muted);
             letter-spacing: 0.06em; text-transform: uppercase;
             border-bottom: 1px solid var(--border-dim);
-            background: var(--bg-card); /* Opaque to mask the ::after */
+            background: var(--bg-card);
         }
         .card-type-line .type-separator { color: var(--border-subtle); margin: 0 0.3rem; }
 
@@ -512,7 +513,6 @@
            CHANGELOG
            ========================================== */
         .changelog { max-width: 800px; margin: 0 auto; }
-
         .changelog-header {
             font-family: 'Rajdhani', sans-serif; font-size: 0.75rem;
             font-weight: 600; color: var(--text-muted);
@@ -523,7 +523,6 @@
         .changelog-header .changelog-prompt { color: var(--hub-accent); margin-right: 0.5rem; }
 
         .changelog-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
-
         .changelog-list li {
             font-family: 'Rajdhani', sans-serif; font-size: 0.85rem;
             font-weight: 500; color: var(--text-muted); letter-spacing: 0.03em;
@@ -562,10 +561,7 @@
            ========================================== */
         .skill-card:focus-visible {
             outline: none;
-            box-shadow:
-                0 0 0 2px var(--bg-deep),
-                0 0 0 4px var(--accent),
-                0 0 20px var(--accent-dim);
+            box-shadow: 0 0 0 2px var(--bg-deep), 0 0 0 4px var(--accent), 0 0 20px var(--accent-dim);
         }
 
         /* ==========================================
@@ -578,10 +574,11 @@
             .skill-card.dealt, .skill-card.settled {
                 opacity: 1 !important;
                 transform: none !important;
+                filter: none !important;
             }
             .status-bar, .hub-header { opacity: 1 !important; transform: none !important; }
             .changelog-list li { opacity: 1 !important; transform: none !important; }
-            .card-inner { transition: none !important; will-change: auto; }
+            .skill-card.settled { transition: none !important; transform-style: flat !important; }
         }
 
         /* ==========================================
@@ -741,19 +738,15 @@
     </div>
 
     <script>
-        /* ==============================================
-           0. BOOT SEQUENCE TIMELINE
-           ============================================== */
         const isMobile = window.innerWidth < 768;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-        // Step 1: Status bar
+        /* ==============================================
+           0. BOOT SEQUENCE
+           ============================================== */
         setTimeout(() => document.querySelector('.status-bar').classList.add('visible'), 200);
-
-        // Step 2: Header
         setTimeout(() => document.querySelector('.hub-header').classList.add('visible'), 500);
 
-        // Step 3: Cards deal in
         const cards = document.querySelectorAll('.skill-card');
         cards.forEach((card, i) => {
             setTimeout(() => {
@@ -765,33 +758,36 @@
             }, 900 + i * 150);
         });
 
-        // Step 4: First title glitch (boot corruption)
         setTimeout(() => triggerGlitch(true), 800);
-
-        // Step 5: Recurring glitch loop
         setTimeout(() => setInterval(() => triggerGlitch(false), 5000), 5500);
-
-        // Step 6: Counter
         setTimeout(startCounter, 1000);
 
 
         /* ==============================================
-           1. DIGITAL PARTICLE SYSTEM
+           1. PARTICLES (page-space, edge-biased)
            ============================================== */
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
-        const PARTICLE_COUNT = isMobile ? 18 : 45;
+        const PARTICLE_COUNT = isMobile ? 20 : 50;
         const CONNECT_DIST = isMobile ? 80 : 130;
 
         function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            canvas.width = document.body.scrollWidth;
+            canvas.height = document.body.scrollHeight;
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // Particle types: 0=square, 1=diamond, 2=line, 3=node(crosshair)
+        // Edge-biased x position
+        function edgeX() {
+            const w = canvas.width;
+            const roll = Math.random();
+            if (roll < 0.3) return Math.random() * w * 0.14;
+            if (roll < 0.6) return w * 0.86 + Math.random() * w * 0.14;
+            return Math.random() * w;
+        }
+
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             const type = Math.random() < 0.25 ? 0 : Math.random() < 0.4 ? 1 : Math.random() < 0.75 ? 2 : 3;
             const isNode = type === 3;
@@ -814,12 +810,12 @@
 
             const colorRoll = Math.random();
             let rgb;
-            if (colorRoll < 0.45) rgb = [74, 124, 89];        // Hub green
-            else if (colorRoll < 0.8) rgb = [140, 160, 195];   // Cool blue-white
-            else rgb = [100, 210, 110];                         // Bright green (rare)
+            if (colorRoll < 0.4) rgb = [74, 124, 89];
+            else if (colorRoll < 0.75) rgb = [140, 160, 195];
+            else rgb = [100, 210, 110];
 
             particles.push({
-                x: Math.random() * canvas.width,
+                x: edgeX(),
                 y: Math.random() * canvas.height,
                 vx, vy, size, type, rgb,
                 baseAlpha: isNode ? 0.25 : 0.12 + Math.random() * 0.18,
@@ -834,40 +830,45 @@
         function drawParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw connections first (behind particles)
+            const scrollY = window.scrollY;
+            const viewBottom = scrollY + window.innerHeight;
+            const viewTop = scrollY;
+
+            // Connections
             for (let i = 0; i < particles.length; i++) {
+                const pi = particles[i];
+                if (pi.y < viewTop - 50 || pi.y > viewBottom + 50) continue;
                 for (let j = i + 1; j < Math.min(i + 8, particles.length); j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
+                    const pj = particles[j];
+                    if (pj.y < viewTop - 50 || pj.y > viewBottom + 50) continue;
+                    const dx = pi.x - pj.x;
+                    const dy = pi.y - pj.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     if (dist < CONNECT_DIST) {
                         const a = (1 - dist / CONNECT_DIST) * 0.07;
                         ctx.strokeStyle = `rgba(74,124,89,${a})`;
                         ctx.lineWidth = 0.5;
                         ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.moveTo(pi.x, pi.y - scrollY);
+                        ctx.lineTo(pj.x, pj.y - scrollY);
                         ctx.stroke();
                     }
                 }
             }
 
-            // Draw particles
+            // Particles
             for (const p of particles) {
                 p.x += p.vx;
                 p.y += p.vy;
                 p.phase += p.phaseSpeed;
 
-                // Wrap
                 if (p.x < -15) p.x = canvas.width + 15;
                 if (p.x > canvas.width + 15) p.x = -15;
                 if (p.y < -15) p.y = canvas.height + 15;
                 if (p.y > canvas.height + 15) p.y = -15;
 
-                // Alpha
                 p.alpha = p.baseAlpha + Math.sin(p.phase) * 0.06;
 
-                // Pulse
                 if (p.pulsing) {
                     p.alpha = p.baseAlpha + 0.45;
                     p.pulseLeft--;
@@ -877,48 +878,46 @@
                     if (p.pulseTimer <= 0) { p.pulsing = true; p.pulseLeft = 6 + Math.floor(Math.random() * 12); }
                 }
 
+                // Skip if off-screen
+                if (p.y < viewTop - 20 || p.y > viewBottom + 20) continue;
+
                 const a = Math.max(0, Math.min(1, p.alpha));
                 const [r, g, b] = p.rgb;
                 const s = p.size;
+                const sy = p.y - scrollY; // Screen Y
 
                 ctx.save();
-
                 if (p.type === 0) {
-                    // Square
                     ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
-                    ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s);
+                    ctx.fillRect(p.x - s / 2, sy - s / 2, s, s);
                 } else if (p.type === 1) {
-                    // Diamond
                     ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
-                    ctx.translate(p.x, p.y);
+                    ctx.translate(p.x, sy);
                     ctx.rotate(Math.PI / 4);
                     ctx.fillRect(-s / 2, -s / 2, s, s);
                 } else if (p.type === 2) {
-                    // Directional line
                     const angle = Math.atan2(p.vy, p.vx);
                     const halfLen = s / 2;
                     ctx.strokeStyle = `rgba(${r},${g},${b},${a})`;
                     ctx.lineWidth = 1;
                     ctx.beginPath();
-                    ctx.moveTo(p.x - Math.cos(angle) * halfLen, p.y - Math.sin(angle) * halfLen);
-                    ctx.lineTo(p.x + Math.cos(angle) * halfLen, p.y + Math.sin(angle) * halfLen);
+                    ctx.moveTo(p.x - Math.cos(angle) * halfLen, sy - Math.sin(angle) * halfLen);
+                    ctx.lineTo(p.x + Math.cos(angle) * halfLen, sy + Math.sin(angle) * halfLen);
                     ctx.stroke();
                 } else {
-                    // Node: dot + crosshair
                     ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
                     ctx.beginPath();
-                    ctx.arc(p.x, p.y, Math.max(0.5, s), 0, Math.PI * 2);
+                    ctx.arc(p.x, sy, Math.max(0.5, s), 0, Math.PI * 2);
                     ctx.fill();
                     ctx.strokeStyle = `rgba(${r},${g},${b},${a * 0.4})`;
                     ctx.lineWidth = 0.5;
                     ctx.beginPath();
-                    ctx.moveTo(p.x - s * 2.5, p.y);
-                    ctx.lineTo(p.x + s * 2.5, p.y);
-                    ctx.moveTo(p.x, p.y - s * 2.5);
-                    ctx.lineTo(p.x, p.y + s * 2.5);
+                    ctx.moveTo(p.x - s * 2.5, sy);
+                    ctx.lineTo(p.x + s * 2.5, sy);
+                    ctx.moveTo(p.x, sy - s * 2.5);
+                    ctx.lineTo(p.x, sy + s * 2.5);
                     ctx.stroke();
                 }
-
                 ctx.restore();
             }
 
@@ -932,7 +931,6 @@
            ============================================== */
         const counterEl = document.getElementById('counter');
         let currentCount = 0;
-
         function startCounter() {
             if (currentCount < 8) {
                 currentCount++;
@@ -943,7 +941,7 @@
 
 
         /* ==============================================
-           3. TITLE GLITCH (JS-driven character corruption)
+           3. TITLE GLITCH
            ============================================== */
         const titleEl = document.getElementById('hub-title');
         const originalTitle = titleEl.textContent;
@@ -951,22 +949,19 @@
 
         function triggerGlitch(isBoot) {
             const chars = originalTitle.split('');
-            const intensity = isBoot ? 0.5 : 0.35; // Boot glitch is more severe
+            const intensity = isBoot ? 0.5 : 0.35;
 
-            // Phase 1: Full corruption
             let corrupted = chars.map(() => Math.random() < intensity ? glitchChars[Math.floor(Math.random() * glitchChars.length)] : null);
             titleEl.textContent = corrupted.map(c => c !== null ? c : ' ').join('');
             titleEl.style.textShadow = '3px 0 #c45a4a, -3px 0 #5ab05a, 0 0 8px rgba(196,90,74,0.3)';
             titleEl.style.transform = `translateX(${(Math.random() - 0.5) * 8}px)`;
 
-            // Phase 2: Partial recovery
             setTimeout(() => {
                 corrupted = chars.map((c, i) => (i % 3 === 0 && Math.random() < intensity) ? glitchChars[Math.floor(Math.random() * glitchChars.length)] : null);
                 titleEl.textContent = corrupted.map((c, i) => c !== null ? c : chars[i]).join('');
                 titleEl.style.transform = `translateX(${(Math.random() - 0.5) * 4}px)`;
             }, isBoot ? 250 : 180);
 
-            // Phase 3: Clean
             setTimeout(() => {
                 titleEl.textContent = originalTitle;
                 titleEl.style.textShadow = 'none';
@@ -976,42 +971,42 @@
 
 
         /* ==============================================
-           4. 3D CARD TILT + HOLOGRAPHIC GLARE
+           4. 3D TILT (on .skill-card directly)
            ============================================== */
-        const MAX_TILT = isMobile ? 0 : 14;
+        const MAX_TILT = isMobile || isTouchDevice ? 0 : 14;
 
-        cards.forEach(card => {
-            if (isTouchDevice) return; // Skip on touch
+        if (MAX_TILT > 0) {
+            cards.forEach(card => {
+                const glare = card.querySelector('.card-glare');
 
-            const inner = card.querySelector('.card-inner');
-            const glare = card.querySelector('.card-glare');
+                card.addEventListener('mousemove', (e) => {
+                    if (!card.classList.contains('settled')) return;
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const cx = rect.width / 2;
+                    const cy = rect.height / 2;
 
-            card.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const cx = rect.width / 2;
-                const cy = rect.height / 2;
+                    const rotateY = ((x - cx) / cx) * MAX_TILT;
+                    const rotateX = ((y - cy) / cy) * -MAX_TILT;
 
-                const rotateY = ((x - cx) / cx) * MAX_TILT;
-                const rotateX = ((y - cy) / cy) * -MAX_TILT;
+                    card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
 
-                inner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                    const gx = (x / rect.width) * 100;
+                    const gy = (y / rect.height) * 100;
+                    glare.style.background = `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 35%, transparent 65%)`;
+                });
 
-                const gx = (x / rect.width) * 100;
-                const gy = (y / rect.height) * 100;
-                glare.style.background = `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 35%, transparent 65%)`;
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'none';
+                    glare.style.background = 'none';
+                });
             });
-
-            card.addEventListener('mouseleave', () => {
-                inner.style.transform = 'rotateX(0) rotateY(0)';
-                glare.style.background = 'none';
-            });
-        });
+        }
 
 
         /* ==============================================
-           5. FOCUS DIM (JS-triggered, only on card hover)
+           5. FOCUS DIM (JS only on card hover)
            ============================================== */
         const grid = document.getElementById('card-grid');
         let overCard = false;
@@ -1023,9 +1018,7 @@
             });
             card.addEventListener('mouseleave', () => {
                 overCard = false;
-                setTimeout(() => {
-                    if (!overCard) grid.classList.remove('has-focus');
-                }, 30);
+                setTimeout(() => { if (!overCard) grid.classList.remove('has-focus'); }, 30);
             });
         });
 

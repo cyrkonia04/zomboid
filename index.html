@@ -1,1 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Zomboid Database // Build 42.20</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
+    <style>
+        /* ==========================================
+           TOKENS
+           ========================================== */
+        :root {
+            --bg-deep: #0a0e13;
+            --bg-raised: #111820;
+            --bg-card: #151d27;
+            --bg-card-art: #0c1118;
+            --bg-card-name: #1a2332;
+            --bg-card-body: #131b25;
+            --text-primary: #d8e0ea;
+            --text-muted: #5a6a7e;
+            --border-dim: #1e2a38;
+            --border-subtle: #253344;
+            --hub-accent: #4a7c59;
+            --hub-accent-glow: rgba(74, 124, 89, 0.35);
+            --radius-card: 8px;
+            --radius-sm: 4px;
+        }
+
+        /* ==========================================
+           RESET
+           ========================================== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--hub-accent); }
+        * { scrollbar-width: thin; scrollbar-color: var(--border-subtle) var(--bg-deep); }
+
+        ::selection { background: rgba(74, 124, 89, 0.4); color: #fff; }
+
+        /* ==========================================
+           BODY & BACKGROUND
+           ========================================== */
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Subtle grid overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+            background-size: 48px 48px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Faint scanlines */
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 3px,
+                rgba(0, 0, 0, 0.025) 3px,
+                rgba(0, 0, 0, 0.025) 6px
+            );
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Vignette */
+        .vignette {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        a { color: var(--hub-accent); text-decoration: none; transition: color 0.2s; }
+        a:hover { color: #8bc49a; }
+
+        /* ==========================================
+           STATUS BAR (top)
+           ========================================== */
+        .status-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 2rem;
+            background: rgba(10, 14, 19, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-dim);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--hub-accent);
+            box-shadow: 0 0 6px var(--hub-accent-glow);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .status-separator {
+            color: var(--border-subtle);
+        }
+
+        /* ==========================================
+           MAIN CONTAINER
+           ========================================== */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem 4rem;
+        }
+
+        /* ==========================================
+           HEADER
+           ========================================== */
+        .hub-header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .hub-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.04em;
+            line-height: 1.1;
+            margin-bottom: 0.3rem;
+        }
+
+        .hub-subtitle {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .hub-subtitle span {
+            color: var(--hub-accent);
+        }
+
+        /* ==========================================
+           CARD GRID
+           ========================================== */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        /* ==========================================
+           THE MTG-STYLE CARD
+           ========================================== */
+        .skill-card {
+            --accent: #4a7c59;
+            --accent-glow: rgba(74, 124, 89, 0.3);
+            --accent-dim: rgba(74, 124, 89, 0.15);
+
+            display: flex;
+            flex-direction: column;
+            aspect-ratio: 5 / 7;
+            background: var(--bg-card);
+            border: 2px solid var(--border-dim);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            position: relative;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .skill-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--accent);
+            box-shadow:
+                0 12px 30px rgba(0, 0, 0, 0.5),
+                0 0 25px var(--accent-dim),
+                0 0 60px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- ART AREA --- */
+        .card-art {
+            position: relative;
+            flex-shrink: 0;
+            height: 44%;
+            background: var(--bg-card-art);
+            border-bottom: 1px solid var(--border-dim);
+            overflow: hidden;
+        }
+
+        /* Inner frame border (MTG feel) */
+        .card-art::after {
+            content: "";
+            position: absolute;
+            inset: 6px;
+            border: 1px solid var(--border-dim);
+            border-radius: 3px;
+            pointer-events: none;
+            transition: border-color 0.3s;
+        }
+
+        .skill-card:hover .card-art::after {
+            border-color: var(--accent-dim);
+        }
+
+        /* Placeholder state (user replaces this with <img>) */
+        .art-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .art-id {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.15em;
+            opacity: 0.6;
+        }
+
+        .art-status {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--border-subtle);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* Accent glow line at bottom of art */
+        .card-art-glow {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .skill-card:hover .card-art-glow {
+            opacity: 0.6;
+        }
+
+        /* --- NAME BAR --- */
+        .card-name-bar {
+            flex-shrink: 0;
+            padding: 0.5rem 0.7rem;
+            background: var(--bg-card-name);
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .card-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+            letter-spacing: 0.02em;
+        }
+
+        .card-cost {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
+        }
+
+        /* --- TYPE LINE --- */
+        .card-type-line {
+            flex-shrink: 0;
+            padding: 0.25rem 0.7rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .card-type-line .type-separator {
+            color: var(--border-subtle);
+            margin: 0 0.3rem;
+        }
+
+        /* --- TEXT BOX --- */
+        .card-body {
+            flex: 1;
+            padding: 0.6rem 0.7rem;
+            background: var(--bg-card-body);
+            overflow: hidden;
+        }
+
+        .card-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.55;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* --- FOOTER BAR --- */
+        .card-footer {
+            flex-shrink: 0;
+            padding: 0.4rem 0.7rem;
+            background: var(--accent-dim);
+            border-top: 1px solid var(--accent-dim);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-category {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .card-arrow {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            opacity: 0;
+            transform: translateX(-5px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        .skill-card:hover .card-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* --- CARD ENTRANCE ANIMATION --- */
+        .skill-card {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: cardEnter 0.5s ease-out forwards;
+        }
+        .skill-card:nth-child(1) { animation-delay: 0.05s; }
+        .skill-card:nth-child(2) { animation-delay: 0.1s; }
+        .skill-card:nth-child(3) { animation-delay: 0.15s; }
+        .skill-card:nth-child(4) { animation-delay: 0.2s; }
+        .skill-card:nth-child(5) { animation-delay: 0.25s; }
+        .skill-card:nth-child(6) { animation-delay: 0.3s; }
+        .skill-card:nth-child(7) { animation-delay: 0.35s; }
+        .skill-card:nth-child(8) { animation-delay: 0.4s; }
+
+        @keyframes cardEnter {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==========================================
+           CHANGELOG SECTION
+           ========================================== */
+        .changelog {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .changelog-header {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .changelog-header .changelog-prompt {
+            color: var(--hub-accent);
+            margin-right: 0.5rem;
+        }
+
+        .changelog-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .changelog-list li {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.03em;
+            padding: 0.35rem 0.7rem;
+            background: rgba(255, 255, 255, 0.015);
+            border-radius: var(--radius-sm);
+            border-left: 2px solid var(--border-dim);
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .changelog-list li:hover {
+            border-left-color: var(--hub-accent);
+            background: rgba(74, 124, 89, 0.05);
+        }
+
+        .changelog-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 1px 6px;
+            border-radius: 2px;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        /* ==========================================
+           FOOTER
+           ========================================== */
+        .hub-footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-dim);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            opacity: 0.5;
+        }
+
+        .hub-footer a {
+            color: var(--text-muted);
+            border-bottom: 1px dashed var(--border-subtle);
+        }
+        .hub-footer a:hover {
+            color: var(--hub-accent);
+            border-bottom-color: var(--hub-accent);
+        }
+
+        /* ==========================================
+           KEYBOARD FOCUS
+           ========================================== */
+        .skill-card:focus-visible {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow:
+                0 0 0 2px var(--bg-deep),
+                0 0 0 4px var(--accent),
+                0 0 20px var(--accent-dim);
+        }
+
+        /* ==========================================
+           REDUCED MOTION
+           ========================================== */
+        @media (prefers-reduced-motion: reduce) {
+            .skill-card,
+            .pulse-dot {
+                animation: none !important;
+            }
+            .skill-card {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+
+        /* ==========================================
+           RESPONSIVE
+           ========================================== */
+        @media (max-width: 1100px) {
+            .card-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 800px) {
+            .container { padding: 2rem 1.25rem 3rem; }
+            .hub-title { font-size: 2.6rem; }
+            .card-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            .card-name { font-size: 1rem; }
+            .card-desc { font-size: 0.75rem; -webkit-line-clamp: 3; }
+            .status-bar { padding: 0.4rem 1rem; font-size: 0.65rem; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 1.5rem 0.75rem 3rem; }
+            .hub-title { font-size: 2rem; }
+            .hub-subtitle { font-size: 0.95rem; }
+            .card-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                max-width: 320px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .status-bar {
+                flex-wrap: wrap;
+                gap: 0.3rem;
+                justify-content: center;
+            }
+            .status-separator { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="vignette"></div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span>PZDB v42.20</span>
+            <span class="status-separator">//</span>
+            <div class="status-indicator">
+                <div class="pulse-dot"></div>
+                <span>System Online</span>
+            </div>
+        </div>
+        <span>8 Entries Loaded</span>
+    </div>
+
+    <div class="container">
+
+        <!-- HEADER -->
+        <header class="hub-header">
+            <h1 class="hub-title">Project Zomboid</h1>
+            <p class="hub-subtitle">Survival Database <span>//</span> Build <span>42.20</span></p>
+        </header>
+
+        <!-- SKILL CARDS -->
+        <div class="card-grid">
+
+            <!-- 01: CARPENTRY -->
+            <a href="carpentry.html" class="skill-card" style="--accent: #c49a6c; --accent-glow: rgba(196,154,108,0.3); --accent-dim: rgba(196,154,108,0.12);">
+                <div class="card-art">
+                    <!-- REPLACE .art-placeholder with: <img src="images/carpentry-icon.png" alt="Carpentry" style="width:100%;height:100%;object-fit:cover;"> -->
+                    <div class="art-placeholder">
+                        <span class="art-id">SKL-001</span>
+                        <span class="art-status">Awaiting Asset</span>
+                    </div>
+                    <div class="card-art-glow"></div>
+                </div>
+                <div class="card-name-bar">
+                    <span class="card-name">Carpentry</span>
+                    <span class="card-cost">★5</span>
+                </div>
+                <div class="card-type-line">Crafting <span class="type-separator">—</span> Construction</div>
+                <div class="card-body">
+                    <p class="card-desc">Structures, furniture, and fortifications. The backbone of any long-term survival base.</p>
+                </div>
+                <div class="card-footer">
+                    <span class="card-category">Base Building</span>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 02: CARVING -->
+            <a href="carving.html" class="skill-card" style="--accent: #a8845a; --accent-glow: rgba(168,132,90,0.3); --accent-dim: rgba(168,132,90,0.12);">
+                <div class="card-art">
+                    <div class="art-placeholder">
+                        <span class="art-id">SKL-002</span>
+                        <span class="art-status">Awaiting Asset</span>
+                    </div>
+                    <div class="card-art-glow"></div>
+                </div>
+                <div class="card-name-bar">
+                    <span class="card-name">Carving</span>
+                    <span class="card-cost">★3</span>
+                </div>
+                <div class="card-type-line">Crafting <span class="type-separator">—</span> Woodwork</div>
+                <div class="card-body">
+                    <p class="card-desc">Wooden weapons, tools, and carvings. Turning raw logs into survival essentials.</p>
+                </div>
+                <div class="card-footer">
+                    <span class="card-category">Weaponry</span>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 03: COOKING -->
+            <a href="cooking.html" class="skill-card" style="--accent: #c45a4a; --accent-glow: rgba(196,90,74,0.3); --accent-dim: rgba(196,90,74,0.12);">
+                <div class="card-art">
+                    <div class="art-placeholder">
+                        <span class="art-id">SKL-003</span>
+                        <span class="art-status">Awaiting Asset</span>
+                    </div>
+                    <div class="card-art-glow"></div>
+                </div>
+                <div class="card-name-bar">
+                    <span class="card-name">Cooking</span>
+                    <span class="card-cost">★4</span>
+                </div>
+                <div class="card-type-line">Survival <span class="type-separator">—</span> Culinary</div>
+                <div class="card-body">
+                    <p class="card-desc">Recipes, nutrition, and food preservation. Keeping hunger and morale from collapsing.</p>
+                </div>
+                <div class="card-footer">
+                    <span class="card-category">Sustenance</span>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 04: POTTERY -->
+            <a href="pottery.html" class="skill-card" style="--accent: #c47a3a; --accent-glow: rgba(196,122,58,0.3); --accent-dim: rgba(196,122,58,0.12);">
+                <div class="card-art">
+                    <div class="art-placeholder">
+                        <span class="art-id">SKL-004</span>
+                        <span class="art-status">Awaiting Asset</span>
+                    </div>
+                    <div class="card-art-glow"></div>
+                </div>
+                <div class="card-name-bar">
+                    <span class="card-name">Pottery</span>
+                    <span class="card-cost">★3</span>
+                </div>
+                <div class="card-type-line">Crafting <span class="type-separator">—</span> Ceramics</div>
+                <div class="card-body">
+                    <p class="card-desc">Clay vessels, storage jars, and cooking pots. Fire, earth, and patience.</p>
+                </div>
+                <div class="card-footer">
+                    <span class="card-category">Storage</span>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 05: TAILORING -->
+            <a href="tailoring.html" class="skill-card" style="--accent: #7a6ab0; --accent-glow: rgba(122,106,176,0.3); --accent-dim: rgba(122,106,176,0.12);">
+                <div class="card-art">
+                    <div class="art-placeholder">
+                        <span class="art-id">SKL-005</span>
+                        <span class="art-status">Awaiting Asset</span>
+                    </div>
+                    <div class="card-art-glow"></div>
+                </div>
+                <div class="card-name-bar">
+                    <span class="card-name">Tailoring</span>
+                    <span class="card-cost">★4</span>
+                </div>
+                <div class="card-type-line">Crafting <span class="type-separator">—</span> Textile</div>
+                <div class="card-body">
+                    <p class="card-desc">Clothing repair, armor crafting, and fabric upgrades. Defending against bites and cold.</p>
+                </div>
+                <div class="card-footer">
+                    <span class="card-category">Defense</span>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 06: AGRICULTURE -->
+            <a href="agriculture.html" class="skill-card" style="--accent: #5ab05a; --accent-glow: rgba(90,176,90,0.3); --accent-dim: rgba(90,176,90,0.12);">
+                <div class="card-art">
+                    <div class="art-placeholder">
+                        <span class="art-id">SKL-006</span>
+                        <span class="art-status">Awaiting Asset</span>
+                    </div>
+                    <div class="card-art-glow"></div>
+                </div>
+                <div class="card-name-bar">
+                    <span class="card-name">Agriculture</span>
+                    <span class="card-cost">★5</span>
+                </div>
+                <div class="card-type-line">Survival <span class="type-separator">—</span> Farming</div>
+                <div class="card-body">
+                    <p class="card-desc">Crop cycles, seasonal planting charts, and farming infrastructure. Infinite food, if you plan right.</p>
+                </div>
+                <div class="card-footer">
+                    <span class="card-category">Food Source</span>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 07: ANIMAL CARE & BUTCHERING -->
+            <a href="animal-care.html" class="skill-card" style="--accent: #8b3a3a; --accent-glow: rgba(139,58,58,0.3); --accent-dim: rgba(139,58,58,0.12);">
+                <div class="card-art">
+                    <div class="art-placeholder">
+                        <span class="art-id">SKL-007</span>
+                        <span class="art-status">Awaiting Asset</span>
+                    </div>
+                    <div class="card-art-glow"></div>
+                </div>
+                <div class="card-name-bar">
+                    <span class="card-name">Animal Care</span>
+                    <span class="card-cost">★4</span>
+                </div>
+                <div class="card-type-line">Survival <span class="type-separator">—</span> Livestock</div>
+                <div class="card-body">
+                    <p class="card-desc">Livestock management, breeding, and meat processing. Living resources that need tending.</p>
+                </div>
+                <div class="card-footer">
+                    <span class="card-category">Resources</span>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+
+            <!-- 08: TRACKING & TRAPPING -->
+            <a href="tracking.html" class="skill-card" style="--accent: #6b7a3a; --accent-glow: rgba(107,122,58,0.3); --accent-dim: rgba(107,122,58,0.12);">
+                <div class="card-art">
+                    <div class="art-placeholder">
+                        <span class="art-id">SKL-008</span>
+                        <span class="art-status">Awaiting Asset</span>
+                    </div>
+                    <div class="card-art-glow"></div>
+                </div>
+                <div class="card-name-bar">
+                    <span class="card-name">Tracking</span>
+                    <span class="card-cost">★3</span>
+                </div>
+                <div class="card-type-line">Survival <span class="type-separator">—</span> Hunting</div>
+                <div class="card-body">
+                    <p class="card-desc">Wildlife detection, trap construction, and hunting strategies. Reading the land for food.</p>
+                </div>
+                <div class="card-footer">
+                    <span class="card-category">Foraging</span>
+                    <span class="card-arrow">→</span>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- CHANGELOG -->
+        <section class="changelog">
+            <h2 class="changelog-header"><span class="changelog-prompt">&gt;</span> Build 42.20 Notable Changes</h2>
+            <ul class="changelog-list">
+                <li><span class="changelog-tag" style="background:rgba(196,122,58,0.15);color:#c47a3a;">NEW</span> Pottery skill introduced — clay gathering, firing, and vessel crafting</li>
+                <li><span class="changelog-tag" style="background:rgba(90,176,90,0.15);color:#5ab05a;">OVERHAUL</span> Agriculture reworked — new crop growth system and seasonal modifiers</li>
+                <li><span class="changelog-tag" style="background:rgba(196,154,108,0.15);color:#c49a6c;">UPDATE</span> Carpentry — new furniture recipes and multi-tile structure improvements</li>
+                <li><span class="changelog-tag" style="background:rgba(196,90,74,0.15);color:#c45a4a;">UPDATE</span> Cooking — nutrition values rebalanced, new preservation methods</li>
+                <li><span class="changelog-tag" style="background:rgba(139,58,58,0.15);color:#8b3a3a;">UPDATE</span> Animal handling — new breeding mechanics and butchering yield changes</li>
+            </ul>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="hub-footer">
+            web woven by <a href="https://cyrkonia04.com" target="_blank" rel="noopener noreferrer">cyrko</a>
+        </footer>
+
+    </div>
+
+</body>
+</html>

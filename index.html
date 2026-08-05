@@ -75,7 +75,34 @@
             pointer-events: none;
         }
 
-        /* Film grain overlay */
+        .matrix-texture {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.04;
+            background-image:
+                linear-gradient(rgba(74, 124, 89, 1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(74, 124, 89, 1) 1px, transparent 1px),
+                linear-gradient(2.5deg, rgba(74, 124, 89, 0.5) 1px, transparent 1px),
+                linear-gradient(92.5deg, rgba(74, 124, 89, 0.5) 1px, transparent 1px),
+                radial-gradient(circle 1.2px at 11px 11px, rgba(74, 124, 89, 1) 0%, transparent 100%),
+                radial-gradient(circle 1.2px at 39px 39px, rgba(74, 124, 89, 1) 0%, transparent 100%),
+                radial-gradient(circle 0.8px at 67px 67px, rgba(74, 124, 89, 0.6) 0%, transparent 100%),
+                radial-gradient(circle 1px at 95px 95px, rgba(74, 124, 89, 0.8) 0%, transparent 100%),
+                radial-gradient(circle 1.5px at 23px 50px, rgba(100, 180, 110, 1) 0%, transparent 100%),
+                radial-gradient(circle 1.2px at 72px 28px, rgba(100, 180, 110, 0.7) 0%, transparent 100%),
+                radial-gradient(circle 1px at 50px 85px, rgba(100, 180, 110, 0.5) 0%, transparent 100%);
+            background-size:
+                26px 26px, 26px 26px, 37px 37px, 37px 37px,
+                26px 26px, 26px 26px, 26px 26px, 26px 26px,
+                37px 37px, 37px 37px, 37px 37px;
+            background-position:
+                0 0, 0 0, 7px 4px, 4px 7px,
+                0 0, 0 0, 0 0, 0 0,
+                0 0, 0 0, 0 0;
+        }
+
         .grain {
             position: fixed;
             inset: 0;
@@ -223,7 +250,6 @@
         }
         .hub-subtitle span { color: var(--hub-accent); }
 
-        /* Data readout strip */
         .data-strip {
             display: flex;
             align-items: center;
@@ -248,20 +274,10 @@
             border-right: none;
             white-space: nowrap;
         }
-        .data-seg:last-child {
-            border-right: 1px solid var(--border-dim);
-        }
-        .data-seg .data-label {
-            color: var(--border-subtle);
-            margin-right: 0.4rem;
-        }
-        .data-seg .data-val {
-            color: var(--hub-accent);
-            font-weight: 600;
-        }
-        .data-seg.data-highlight {
-            background: rgba(74, 124, 89, 0.06);
-        }
+        .data-seg:last-child { border-right: 1px solid var(--border-dim); }
+        .data-seg .data-label { color: var(--border-subtle); margin-right: 0.4rem; }
+        .data-seg .data-val { color: var(--hub-accent); font-weight: 600; }
+        .data-seg.data-highlight { background: rgba(74, 124, 89, 0.06); }
 
         .card-grid {
             display: grid;
@@ -432,16 +448,17 @@
         .card-type-line .type-separator { color: var(--border-subtle); margin: 0 0.3rem; }
 
         .card-body {
-            flex: 1; padding: 0.6rem 0.7rem;
-            background: var(--bg-card-body); overflow: hidden;
+            flex: 1;
+            padding: 0.6rem 0.7rem;
+            background: var(--bg-card-body);
+            overflow: hidden;
         }
         .card-desc {
             font-size: 0.8rem; color: var(--text-muted); line-height: 1.55;
-            display: -webkit-box; -webkit-line-clamp: 4;
+            display: -webkit-box; -webkit-line-clamp: 3;
             -webkit-box-orient: vertical; overflow: hidden;
         }
 
-        /* Entries metadata: hidden by default, revealed on hover */
         .card-entries {
             font-family: 'Rajdhani', sans-serif;
             font-size: 0.7rem;
@@ -449,28 +466,12 @@
             color: var(--text-muted);
             letter-spacing: 0.08em;
             text-transform: uppercase;
-            padding: 0 0.7rem;
+            padding: 0.35rem 0.7rem 0.2rem;
             border-bottom: 1px solid var(--border-dim);
-            margin-bottom: 0.1rem;
-            opacity: 0;
-            max-height: 0;
-            overflow: hidden;
-            transition: opacity 0.35s ease, max-height 0.35s ease, padding 0.35s ease 0.35s ease, margin-bottom 0.35s ease;
+            margin-top: -2px;
         }
-        .skill-card.settled:hover .card-entries {
-            opacity: 1;
-            max-height: 1.5rem;
-            padding-bottom: 0.35rem;
-            margin-bottom: 0.1rem;
-        }
-        .card-entries .entries-label {
-            color: var(--border-subtle);
-            margin-right: 0.4rem;
-        }
-        .card-entries .entries-count {
-            color: var(--hub-accent);
-            font-weight: 600;
-        }
+        .card-entries .entries-label { color: var(--border-subtle); margin-right: 0.4rem; }
+        .card-entries .entries-count { color: var(--hub-accent); font-weight: 600; }
 
         .card-footer {
             flex-shrink: 0; padding: 0.4rem 0.7rem;
@@ -520,19 +521,6 @@
             letter-spacing: 0.1em; text-transform: uppercase;
             padding: 1px 6px; border-radius: 2px;
             margin-right: 0.5rem; vertical-align: middle;
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
-        }
-        .changelog-tag:hover {
-            background: rgba(74, 124, 89, 0.15) !important;
-            color: #8bc49a !important;
-            border-color: rgba(74, 124, 89, 0.4) !important;
-        }
-        .changelog-tag.active-tag {
-            background: rgba(74, 124, 89, 0.2) !important;
-            color: #8bc49a !important;
-            border-color: rgba(74, 124, 89, 0.5) !important;
-            box-shadow: 0 0 8px rgba(74, 124, 89, 0.15);
         }
 
         .hub-footer {
@@ -556,7 +544,6 @@
             .status-bar, .hub-header, .data-strip { opacity: 1 !important; transform: none !important; }
             .changelog-list li { opacity: 1 !important; transform: none !important; }
             .skill-card.settled { transition: none !important; }
-            .card-entries { transition: none !important; }
         }
 
         @media (max-width: 1100px) { .card-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -565,7 +552,7 @@
             .hub-title { font-size: 2.6rem; }
             .card-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
             .card-name { font-size: 1rem; }
-            .card-desc { font-size: 0.75rem; -webkit-line-clamp: 3; }
+            .card-desc { font-size: 0.75rem; -webkit-line-clamp: 2; }
             .status-bar { padding: 0.4rem 1rem; font-size: 0.65rem; }
             .data-strip { flex-wrap: wrap; justify-content: center; }
             .data-seg { font-size: 0.6rem; padding: 0.25rem 0.5rem; }
@@ -585,6 +572,7 @@
 </head>
 <body>
 
+    <div class="matrix-texture"></div>
     <canvas id="particle-canvas"></canvas>
     <div class="vignette"></div>
     <div class="grain"></div>
@@ -609,7 +597,6 @@
             <p class="hub-subtitle">Survival Database <span>//</span> Build <span>42.20</span></p>
         </header>
 
-        <!-- Data readout strip -->
         <div class="data-strip" id="data-strip">
             <div class="data-seg data-highlight"><span class="data-label">Skill Tree:</span><span class="data-val">8 Branches</span></div>
             <div class="data-seg"><span class="data-label">Build:</span><span class="data-val">42.20</span></div>
@@ -712,7 +699,7 @@
                         <p class="card-desc">Livestock management, breeding, and meat processing. Living resources that need tending.</p>
                         <div class="card-entries"><span class="entries-label">Entries:</span><span class="entries-count">16</span></div>
                     </div>
-                    <div class="card-footer"><span class="card-category">Resources</span><span class="card-arrow">→</span></div>
+                    <div class="card-footer"><span class="card-category">Resources</span><span class="card-tag">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
@@ -736,11 +723,11 @@
         <section class="changelog">
             <h2 class="changelog-header"><span class="changelog-prompt">&gt;</span> Build 42.20 Notable Changes</h2>
             <ul class="changelog-list" id="changelog-list">
-                <li data-tag="new"><span class="changelog-tag" style="background:rgba(196,122,58,0.15);color:#c47a3a;">NEW</span> Pottery skill introduced — clay gathering, firing, and vessel crafting</li>
-                <li data-tag="overhaul"><span class="changelog-tag" style="background:rgba(90,176,90,0.15);color:#5ab05a;">OVERHAUL</span> Agriculture reworked — new crop growth system and seasonal modifiers</li>
-                <li data-tag="update"><span class="changelog-tag" style="background:rgba(196,154,108,0.15);color:#c49a6c;">UPDATE</span> Carpentry — new furniture recipes and multi-tile structure improvements</li>
-                <li data-tag="update"><span class="changelog-tag" style="background:rgba(196,90,74,0.15);color:#c45a4a;">UPDATE</span> Cooking — nutrition values rebalanced, new preservation methods</li>
-                <li data-tag="update"><span class="changelog-tag" style="background:rgba(139,58,58,0.15);color:#8b3a3a;">UPDATE</span> Animal handling — new breeding mechanics and butchering yield changes</li>
+                <li><span class="changelog-tag" style="background:rgba(196,122,58,0.15);color:#c47a3a;">NEW</span> Pottery skill introduced — clay gathering, firing, and vessel crafting</li>
+                <li><span class="changelog-tag" style="background:rgba(90,176,90,0.15);color:#5ab05a;">OVERHAUL</span> Agriculture reworked — new crop growth system and seasonal modifiers</li>
+                <li><span class="changelog-tag" style="background:rgba(196,154,108,0.15);color:#c49a6c;">UPDATE</span> Carpentry — new furniture recipes and multi-tile structure improvements</li>
+                <li><span class="changelog-tag" style="background:rgba(196,90,74,0.15);color:#c45a4a;">UPDATE</span> Cooking — nutrition values rebalanced, new preservation methods</li>
+                <li><span class="changelog-tag" style="background:rgba(139,58,58,0.15);color:#8b3a3a;">UPDATE</span> Animal handling — new breeding mechanics and butchering yield changes</li>
             </ul>
         </section>
 
@@ -763,7 +750,6 @@
         setTimeout(() => document.querySelector('.hub-header').classList.add('visible'), 500);
         setTimeout(() => document.getElementById('data-strip').classList.add('visible'), 800);
 
-        // Calculate total entries from data attributes
         const totalEntriesEl = document.getElementById('total-entries');
         const totalEntries = Array.from(document.querySelectorAll('.skill-card[data-entries]'))
             .reduce((sum, c) => sum + parseInt(c.dataset.entries || 0), 0);
@@ -804,7 +790,7 @@
 
 
         /* ==============================================
-           SCAN LINE — fast sweep, 15s cooldown, FIXED trail particles
+           SCAN LINE
            ============================================== */
         const scanEl = document.getElementById('scan-line');
         const SWEEP_DURATION = 3500;
@@ -821,11 +807,9 @@
         function tickScan() {
             if (scanState === 'sweep') {
                 scanY += SWEEP_PX;
-
                 for (let i = 0; i < 2 + Math.floor(Math.random() * 2); i++) {
                     scanTrail.push({
                         x: Math.random() * window.innerWidth,
-                        // Store as screen-space Y directly — no scroll conversion needed
                         screenY: scanY + 50,
                         size: 1 + Math.random() * 2.5,
                         alpha: 0.3 + Math.random() * 0.25,
@@ -835,7 +819,6 @@
                     });
                     scanTrail[scanTrail.length - 1].maxLife = scanTrail[scanTrail.length - 1].life;
                 }
-
                 if (scanY > viewH + 100) {
                     scanState = 'cooldown';
                     scanTimer = COOLDOWN_DURATION / (1000 / 60);
@@ -849,7 +832,6 @@
                     scanEl.style.display = 'block';
                 }
             }
-
             scanEl.style.top = scanY + 'px';
             requestAnimationFrame(tickScan);
         }
@@ -857,7 +839,7 @@
 
 
         /* ==============================================
-           PARTICLES — original 4-type system
+           PARTICLES
            ============================================== */
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
@@ -915,7 +897,6 @@
             const vb = sy + canvas.height + 20;
             const vt = sy - 20;
 
-            // Connections
             for (let i = 0; i < particles.length; i++) {
                 const pi = particles[i];
                 if (pi.y < vt || pi.y > vb) continue;
@@ -936,7 +917,6 @@
                 }
             }
 
-            // Main particles
             for (const p of particles) {
                 p.x += p.vx; p.y += p.vy; p.phase += p.ps;
                 if (p.x < -15) p.x = canvas.width + 15;
@@ -988,28 +968,16 @@
                 ctx.restore();
             }
 
-            // Scan trail: draw at raw screenY, no scroll offset
             for (let i = scanTrail.length - 1; i >= 0; i--) {
                 const t = scanTrail[i];
                 t.screenY += t.vy;
                 t.life--;
-
-                if (t.life <= 0) {
-                    scanTrail.splice(i, 1);
-                    continue;
-                }
-
+                if (t.life <= 0) { scanTrail.splice(i, 1); continue; }
                 const progress = t.life / t.maxLife;
                 const a = t.alpha * progress;
-                const sy2 = t.screenY;
-
-                if (sy2 < -10 || sy2 > canvas.height + 10) {
-                    scanTrail.splice(i, 1);
-                    continue;
-                }
-
+                if (t.screenY < -10 || t.screenY > canvas.height + 10) { scanTrail.splice(i, 1); continue; }
                 ctx.fillStyle = 'rgba(74,124,89,' + Math.max(0, a).toFixed(3) + ')';
-                ctx.fillRect(t.x - t.size / 2, sy2 - t.size / 2, t.size, t.size);
+                ctx.fillRect(t.x - t.size / 2, t.screenY - t.size / 2, t.size, t.size);
             }
 
             requestAnimationFrame(drawParticles);
@@ -1089,43 +1057,9 @@
 
 
         /* ==============================================
-           CHANGELOG — tag filtering
-           ============================================== */
-        const changelogList = document.getElementById('changelog-list');
-        const changelogTags = changelogList.querySelectorAll('.changelog-tag');
-        const changelogItems = changelogList.querySelectorAll('li');
-        let activeFilter = 'all';
-
-        function filterChangelog(tag) {
-            if (activeFilter === tag) {
-                activeFilter = 'all';
-                changelogTags.forEach(t => t.classList.remove('active-tag'));
-            } else {
-                activeFilter = tag;
-                changelogTags.forEach(t => {
-                    t.classList.toggle('active-tag', t.getAttribute('data-tag') === tag);
-                });
-            }
-            changelogItems.forEach(li => {
-                if (activeFilter === 'all' || li.getAttribute('data-tag') === activeFilter) {
-                    li.style.display = '';
-                } else {
-                    li.style.display = 'none';
-                }
-            });
-        }
-
-        changelogTags.forEach(tag => {
-            tag.addEventListener('click', () => {
-                filterChangelog(tag.getAttribute('data-tag'));
-            });
-        });
-
-
-        /* ==============================================
            CHANGELOG SCROLL REVEAL
            ============================================== */
-        const changelogObsItems = changelogList.querySelectorAll('li');
+        const changelogObsItems = document.querySelectorAll('.changelog-list li');
         const revealObs = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {

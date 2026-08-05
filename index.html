@@ -11,11 +11,19 @@
 
     <style>
         /* ==========================================
+           @PROPERTY FOR ANIMATED BORDER
+           ========================================== */
+        @property --border-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        /* ==========================================
            TOKENS
            ========================================== */
         :root {
             --bg-deep: #0a0e13;
-            --bg-raised: #111820;
             --bg-card: #151d27;
             --bg-card-art: #0c1118;
             --bg-card-name: #1a2332;
@@ -56,7 +64,6 @@
             position: relative;
         }
 
-        /* Subtle grid overlay */
         body::before {
             content: "";
             position: fixed;
@@ -69,17 +76,13 @@
             pointer-events: none;
         }
 
-        /* Faint scanlines */
         body::after {
             content: "";
             position: fixed;
             inset: 0;
             background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 3px,
-                rgba(0, 0, 0, 0.025) 3px,
-                rgba(0, 0, 0, 0.025) 6px
+                0deg, transparent, transparent 3px,
+                rgba(0, 0, 0, 0.025) 3px, rgba(0, 0, 0, 0.025) 6px
             );
             z-index: 0;
             pointer-events: none;
@@ -96,25 +99,29 @@
         }
 
         /* ==========================================
-           SCAN LINE
+           SCAN LINE (enhanced visibility)
            ========================================== */
         .scan-line {
             position: fixed;
             left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent 5%, var(--hub-accent) 30%, var(--hub-accent) 70%, transparent 95%);
+            height: 2px;
+            background: linear-gradient(90deg, transparent 2%, var(--hub-accent) 20%, var(--hub-accent) 80%, transparent 98%);
             opacity: 0;
             z-index: 50;
             pointer-events: none;
-            animation: scanSweep 7s ease-in-out infinite;
-            box-shadow: 0 0 8px var(--hub-accent-glow), 0 0 30px rgba(74, 124, 89, 0.1);
+            animation: scanSweep 5s ease-in-out infinite;
+            box-shadow:
+                0 0 12px var(--hub-accent-glow),
+                0 0 40px rgba(74, 124, 89, 0.15),
+                0 -4px 20px rgba(74, 124, 89, 0.08),
+                0 4px 20px rgba(74, 124, 89, 0.08);
         }
 
         @keyframes scanSweep {
             0% { top: -2px; opacity: 0; }
-            3% { opacity: 0.35; }
+            2% { opacity: 0.55; }
             50% { top: 100vh; }
-            97% { opacity: 0.35; }
+            98% { opacity: 0.55; }
             100% { top: 100vh; opacity: 0; }
         }
 
@@ -154,45 +161,28 @@
             letter-spacing: 0.08em;
             text-transform: uppercase;
             opacity: 0;
-            animation: fadeSlideDown 0.5s ease-out 0.2s forwards;
+            transform: translateY(-10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
-        @keyframes fadeSlideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .status-bar.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
-        .status-left {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
+        .status-left { display: flex; align-items: center; gap: 1.5rem; }
+        .status-indicator { display: flex; align-items: center; gap: 0.4rem; }
 
         .pulse-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
+            width: 6px; height: 6px; border-radius: 50%;
             background: var(--hub-accent);
             box-shadow: 0 0 6px var(--hub-accent-glow);
             animation: pulse 2s ease-in-out infinite;
         }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         .status-separator { color: var(--border-subtle); }
-
-        .entry-counter {
-            font-variant-numeric: tabular-nums;
-        }
+        .entry-counter { font-variant-numeric: tabular-nums; }
 
         /* ==========================================
            MAIN CONTAINER
@@ -212,7 +202,13 @@
             text-align: center;
             margin-bottom: 3.5rem;
             opacity: 0;
-            animation: fadeSlideDown 0.6s ease-out 0.5s forwards;
+            transform: translateY(-10px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .hub-header.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .hub-title {
@@ -223,32 +219,20 @@
             letter-spacing: 0.04em;
             line-height: 1.1;
             margin-bottom: 0.3rem;
-            position: relative;
             display: inline-block;
-            animation: titleGlitch 8s ease-in-out infinite;
+            position: relative;
+            transition: transform 0.05s ease, text-shadow 0.05s ease;
         }
 
-        @keyframes titleGlitch {
-            0%, 88%, 100% {
-                text-shadow: none;
-                transform: none;
-            }
-            89% {
-                text-shadow: 2px 0 rgba(196, 90, 74, 0.7), -2px 0 rgba(90, 176, 90, 0.7);
-                transform: translateX(3px) skewX(-1deg);
-            }
-            91% {
-                text-shadow: -1px 0 rgba(90, 176, 90, 0.7), 1px 0 rgba(196, 90, 74, 0.7);
-                transform: translateX(-2px) skewX(0.5deg);
-            }
-            92% {
-                text-shadow: 1px 0 rgba(196, 90, 74, 0.5), -1px 0 rgba(90, 176, 90, 0.5);
-                transform: translateX(1px);
-            }
-            93% {
-                text-shadow: none;
-                transform: none;
-            }
+        /* Glitch underline bar */
+        .hub-title::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; left: 0; right: 0;
+            height: 2px;
+            background: var(--hub-accent);
+            opacity: 0.4;
+            box-shadow: 0 0 10px var(--hub-accent-glow);
         }
 
         .hub-subtitle {
@@ -259,7 +243,6 @@
             letter-spacing: 0.12em;
             text-transform: uppercase;
         }
-
         .hub-subtitle span { color: var(--hub-accent); }
 
         /* ==========================================
@@ -273,21 +256,21 @@
             perspective: 1200px;
         }
 
-        /* Hover: dim non-hovered cards */
-        .card-grid:hover .skill-card {
-            opacity: 0.45;
-            filter: brightness(0.6) saturate(0.5);
+        /* Focus dim: only when .has-focus class is present (set by JS) */
+        .card-grid.has-focus .skill-card {
+            opacity: 0.35;
+            filter: brightness(0.5) saturate(0.3);
             transform: scale(0.97);
-            transition: opacity 0.4s ease, filter 0.4s ease, transform 0.4s ease;
+            transition: opacity 0.4s ease, filter 0.4s ease, transform 0.4s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
-        .card-grid:hover .skill-card:hover {
+        .card-grid.has-focus .skill-card:hover {
             opacity: 1;
             filter: brightness(1) saturate(1);
             transform: scale(1);
         }
 
         /* ==========================================
-           THE MTG-STYLE CARD (outer shell)
+           MTG CARD — OUTER SHELL
            ========================================== */
         .skill-card {
             --accent: #4a7c59;
@@ -298,87 +281,118 @@
             display: flex;
             flex-direction: column;
             aspect-ratio: 5 / 7;
-            background: var(--bg-card);
             border: 2px solid var(--border-dim);
             border-radius: var(--radius-card);
-            overflow: hidden;
             text-decoration: none;
             color: inherit;
             cursor: pointer;
-            transition: transform 0.4s ease, opacity 0.4s ease, filter 0.4s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 
-            /* Entrance animation */
+            /* Entrance: hidden by default, JS reveals */
             opacity: 0;
-            transform: translateY(40px) scale(0.9);
-            animation: cardDeal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            transform: translateY(60px) scale(0.85);
         }
 
-        .skill-card:nth-child(1) { animation-delay: 0.6s; }
-        .skill-card:nth-child(2) { animation-delay: 0.7s; }
-        .skill-card:nth-child(3) { animation-delay: 0.8s; }
-        .skill-card:nth-child(4) { animation-delay: 0.9s; }
-        .skill-card:nth-child(5) { animation-delay: 1.0s; }
-        .skill-card:nth-child(6) { animation-delay: 1.1s; }
-        .skill-card:nth-child(7) { animation-delay: 1.2s; }
-        .skill-card:nth-child(8) { animation-delay: 1.3s; }
+        .skill-card.dealt {
+            animation: cardDeal 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .skill-card.settled {
+            opacity: 1;
+            transform: none;
+            animation: none;
+            transition: transform 0.4s ease, opacity 0.4s ease, filter 0.4s ease, box-shadow 0.3s ease;
+        }
 
         @keyframes cardDeal {
-            0% {
-                opacity: 0;
-                transform: translateY(60px) scale(0.85) rotateX(20deg);
-            }
-            65% {
-                opacity: 1;
-                transform: translateY(-4px) scale(1.02) rotateX(-3deg);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1) rotateX(0);
-            }
+            0% { opacity: 0; transform: translateY(80px) scale(0.8) rotateX(25deg); }
+            60% { opacity: 1; transform: translateY(-6px) scale(1.03) rotateX(-4deg); }
+            80% { transform: translateY(3px) scale(0.98) rotateX(1deg); }
+            100% { opacity: 1; transform: translateY(0) scale(1) rotateX(0); }
         }
 
-        /* Hover border glow */
-        .skill-card:hover {
-            border-color: var(--accent);
-            box-shadow:
-                0 12px 35px rgba(0, 0, 0, 0.5),
-                0 0 20px var(--accent-dim),
-                0 0 60px rgba(0, 0, 0, 0.3);
+        /* Hover glow (static fallback for no @property support) */
+        .skill-card.settled:hover {
+            box-shadow: 0 12px 35px rgba(0,0,0,0.5), 0 0 25px var(--accent-dim);
+        }
+
+        /* ==========================================
+           ROTATING BORDER (::before)
+           ========================================== */
+        .skill-card::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            background: conic-gradient(
+                from var(--border-angle),
+                transparent 0%,
+                transparent 25%,
+                var(--accent) 40%,
+                var(--accent) 50%,
+                transparent 65%,
+                transparent 100%
+            );
+            border-radius: calc(var(--radius-card) + 3px);
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            animation: rotateBorder 2.5s linear infinite;
+            pointer-events: none;
+        }
+
+        .skill-card.settled:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes rotateBorder {
+            to { --border-angle: 360deg; }
+        }
+
+        /* ==========================================
+           BACKGROUND MASK (::after)
+           Covers the inner area so only the border
+           gap shows the rotating gradient.
+           ========================================== */
+        .skill-card::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: var(--bg-card);
+            border-radius: calc(var(--radius-card) - 2px);
+            z-index: 0;
+            pointer-events: none;
         }
 
         /* ==========================================
            CARD INNER (3D transform target)
            ========================================== */
         .card-inner {
+            position: relative;
+            z-index: 1;
             display: flex;
             flex-direction: column;
             height: 100%;
-            position: relative;
             transform-style: preserve-3d;
             transition: transform 0.12s ease-out;
             will-change: transform;
         }
 
         /* ==========================================
-           HOLOGRAPHIC GLARE OVERLAY
+           HOLOGRAPHIC GLARE
            ========================================== */
         .card-glare {
             position: absolute;
             inset: 0;
             pointer-events: none;
             z-index: 10;
-            border-radius: var(--radius-card);
+            border-radius: calc(var(--radius-card) - 2px);
             opacity: 0;
             transition: opacity 0.3s ease;
             mix-blend-mode: overlay;
         }
-
-        .skill-card:hover .card-glare {
-            opacity: 1;
-        }
+        .skill-card:hover .card-glare { opacity: 1; }
 
         /* ==========================================
-           CARD ART AREA
+           CARD ART
            ========================================== */
         .card-art {
             position: relative;
@@ -398,53 +412,30 @@
             pointer-events: none;
             transition: border-color 0.3s;
         }
-
-        .skill-card:hover .card-art::after {
-            border-color: var(--accent-dim);
-        }
+        .skill-card:hover .card-art::after { border-color: var(--accent-dim); }
 
         .art-placeholder {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.4rem;
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 0.4rem;
         }
-
         .art-id {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 0.65rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            letter-spacing: 0.15em;
-            opacity: 0.6;
+            font-family: 'Rajdhani', sans-serif; font-size: 0.65rem;
+            font-weight: 600; color: var(--text-muted);
+            letter-spacing: 0.15em; opacity: 0.6;
         }
-
         .art-status {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: var(--border-subtle);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+            font-family: 'Rajdhani', sans-serif; font-size: 0.7rem;
+            font-weight: 500; color: var(--border-subtle);
+            letter-spacing: 0.1em; text-transform: uppercase;
         }
 
         .card-art-glow {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
+            position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
+            opacity: 0; transition: opacity 0.3s;
         }
-
-        .skill-card:hover .card-art-glow {
-            opacity: 0.7;
-        }
+        .skill-card:hover .card-art-glow { opacity: 0.7; }
 
         /* ==========================================
            CARD NAME BAR
@@ -454,28 +445,18 @@
             padding: 0.5rem 0.7rem;
             background: var(--bg-card-name);
             border-bottom: 1px solid var(--border-dim);
-            display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-            gap: 0.5rem;
+            display: flex; align-items: baseline;
+            justify-content: space-between; gap: 0.5rem;
         }
-
         .card-name {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            line-height: 1.2;
-            letter-spacing: 0.02em;
+            font-family: 'Rajdhani', sans-serif; font-size: 1.15rem;
+            font-weight: 700; color: var(--text-primary);
+            line-height: 1.2; letter-spacing: 0.02em;
         }
-
         .card-cost {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            letter-spacing: 0.05em;
-            flex-shrink: 0;
+            font-family: 'Rajdhani', sans-serif; font-size: 0.75rem;
+            font-weight: 600; color: var(--text-muted);
+            letter-spacing: 0.05em; flex-shrink: 0;
         }
 
         /* ==========================================
@@ -484,178 +465,103 @@
         .card-type-line {
             flex-shrink: 0;
             padding: 0.25rem 0.7rem;
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
+            font-family: 'Rajdhani', sans-serif; font-size: 0.7rem;
+            font-weight: 500; color: var(--text-muted);
+            letter-spacing: 0.06em; text-transform: uppercase;
             border-bottom: 1px solid var(--border-dim);
+            background: var(--bg-card); /* Opaque to mask the ::after */
         }
-
-        .card-type-line .type-separator {
-            color: var(--border-subtle);
-            margin: 0 0.3rem;
-        }
+        .card-type-line .type-separator { color: var(--border-subtle); margin: 0 0.3rem; }
 
         /* ==========================================
            CARD TEXT BOX
            ========================================== */
         .card-body {
-            flex: 1;
-            padding: 0.6rem 0.7rem;
-            background: var(--bg-card-body);
-            overflow: hidden;
+            flex: 1; padding: 0.6rem 0.7rem;
+            background: var(--bg-card-body); overflow: hidden;
         }
-
         .card-desc {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            line-height: 1.55;
-            display: -webkit-box;
-            -webkit-line-clamp: 4;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            font-size: 0.8rem; color: var(--text-muted); line-height: 1.55;
+            display: -webkit-box; -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical; overflow: hidden;
         }
 
         /* ==========================================
            CARD FOOTER
            ========================================== */
         .card-footer {
-            flex-shrink: 0;
-            padding: 0.4rem 0.7rem;
+            flex-shrink: 0; padding: 0.4rem 0.7rem;
             background: var(--accent-dim);
             border-top: 1px solid var(--accent-dim);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            display: flex; align-items: center; justify-content: space-between;
         }
-
         .card-category {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 0.65rem;
-            font-weight: 600;
-            color: var(--accent);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
+            font-family: 'Rajdhani', sans-serif; font-size: 0.65rem;
+            font-weight: 600; color: var(--accent);
+            letter-spacing: 0.1em; text-transform: uppercase;
         }
-
         .card-arrow {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--accent);
-            opacity: 0;
-            transform: translateX(-5px);
+            font-family: 'Rajdhani', sans-serif; font-size: 0.75rem;
+            font-weight: 700; color: var(--accent);
+            opacity: 0; transform: translateX(-5px);
             transition: opacity 0.3s, transform 0.3s;
         }
-
-        .skill-card:hover .card-arrow {
-            opacity: 1;
-            transform: translateX(0);
-        }
+        .skill-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
 
         /* ==========================================
            CHANGELOG
            ========================================== */
-        .changelog {
-            max-width: 800px;
-            margin: 0 auto;
-        }
+        .changelog { max-width: 800px; margin: 0 auto; }
 
         .changelog-header {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
+            font-family: 'Rajdhani', sans-serif; font-size: 0.75rem;
+            font-weight: 600; color: var(--text-muted);
+            letter-spacing: 0.15em; text-transform: uppercase;
+            margin-bottom: 1rem; padding-bottom: 0.5rem;
             border-bottom: 1px solid var(--border-dim);
         }
+        .changelog-header .changelog-prompt { color: var(--hub-accent); margin-right: 0.5rem; }
 
-        .changelog-header .changelog-prompt {
-            color: var(--hub-accent);
-            margin-right: 0.5rem;
-        }
-
-        .changelog-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-        }
+        .changelog-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
 
         .changelog-list li {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            letter-spacing: 0.03em;
+            font-family: 'Rajdhani', sans-serif; font-size: 0.85rem;
+            font-weight: 500; color: var(--text-muted); letter-spacing: 0.03em;
             padding: 0.35rem 0.7rem;
             background: rgba(255, 255, 255, 0.015);
             border-radius: var(--radius-sm);
             border-left: 2px solid var(--border-dim);
-            transition: border-color 0.3s, background 0.3s, transform 0.4s ease, opacity 0.4s ease;
-            /* Scroll reveal starting state */
-            opacity: 0;
-            transform: translateX(-15px);
+            opacity: 0; transform: translateX(-15px);
+            transition: border-color 0.3s, background 0.3s, opacity 0.5s ease, transform 0.5s ease;
         }
-
-        .changelog-list li.revealed {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .changelog-list li:hover {
-            border-left-color: var(--hub-accent);
-            background: rgba(74, 124, 89, 0.05);
-        }
+        .changelog-list li.revealed { opacity: 1; transform: translateX(0); }
+        .changelog-list li:hover { border-left-color: var(--hub-accent); background: rgba(74, 124, 89, 0.05); }
 
         .changelog-tag {
-            display: inline-block;
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            padding: 1px 6px;
-            border-radius: 2px;
-            margin-right: 0.5rem;
-            vertical-align: middle;
+            display: inline-block; font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 1px 6px; border-radius: 2px;
+            margin-right: 0.5rem; vertical-align: middle;
         }
 
         /* ==========================================
            FOOTER
            ========================================== */
         .hub-footer {
-            text-align: center;
-            margin-top: 4rem;
-            padding-top: 2rem;
+            text-align: center; margin-top: 4rem; padding-top: 2rem;
             border-top: 1px solid var(--border-dim);
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            letter-spacing: 0.08em;
-            opacity: 0.5;
+            font-family: 'Rajdhani', sans-serif; font-size: 0.75rem;
+            font-weight: 500; color: var(--text-muted);
+            letter-spacing: 0.08em; opacity: 0.5;
         }
-
-        .hub-footer a {
-            color: var(--text-muted);
-            border-bottom: 1px dashed var(--border-subtle);
-        }
-        .hub-footer a:hover {
-            color: var(--hub-accent);
-            border-bottom-color: var(--hub-accent);
-        }
+        .hub-footer a { color: var(--text-muted); border-bottom: 1px dashed var(--border-subtle); }
+        .hub-footer a:hover { color: var(--hub-accent); border-bottom-color: var(--hub-accent); }
 
         /* ==========================================
            KEYBOARD FOCUS
            ========================================== */
         .skill-card:focus-visible {
             outline: none;
-            border-color: var(--accent);
             box-shadow:
                 0 0 0 2px var(--bg-deep),
                 0 0 0 4px var(--accent),
@@ -666,66 +572,36 @@
            REDUCED MOTION
            ========================================== */
         @media (prefers-reduced-motion: reduce) {
-            .skill-card,
-            .pulse-dot,
-            .scan-line,
-            .hub-title,
-            .status-bar,
-            .hub-header {
+            .skill-card, .pulse-dot, .scan-line, .skill-card::before {
                 animation: none !important;
             }
-            .skill-card {
+            .skill-card.dealt, .skill-card.settled {
                 opacity: 1 !important;
                 transform: none !important;
             }
-            .status-bar, .hub-header {
-                opacity: 1 !important;
-            }
-            .changelog-list li {
-                opacity: 1 !important;
-                transform: none !important;
-            }
-            .card-inner {
-                transition: none !important;
-                will-change: auto;
-            }
+            .status-bar, .hub-header { opacity: 1 !important; transform: none !important; }
+            .changelog-list li { opacity: 1 !important; transform: none !important; }
+            .card-inner { transition: none !important; will-change: auto; }
         }
 
         /* ==========================================
            RESPONSIVE
            ========================================== */
-        @media (max-width: 1100px) {
-            .card-grid { grid-template-columns: repeat(3, 1fr); }
-        }
-
+        @media (max-width: 1100px) { .card-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 800px) {
             .container { padding: 2rem 1.25rem 3rem; }
             .hub-title { font-size: 2.6rem; }
-            .card-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
+            .card-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
             .card-name { font-size: 1rem; }
             .card-desc { font-size: 0.75rem; -webkit-line-clamp: 3; }
             .status-bar { padding: 0.4rem 1rem; font-size: 0.65rem; }
         }
-
         @media (max-width: 480px) {
             .container { padding: 1.5rem 0.75rem 3rem; }
             .hub-title { font-size: 2rem; }
             .hub-subtitle { font-size: 0.95rem; }
-            .card-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-                max-width: 320px;
-                margin-left: auto;
-                margin-right: auto;
-            }
-            .status-bar {
-                flex-wrap: wrap;
-                gap: 0.3rem;
-                justify-content: center;
-            }
+            .card-grid { grid-template-columns: 1fr; gap: 1rem; max-width: 320px; margin-left: auto; margin-right: auto; }
+            .status-bar { flex-wrap: wrap; gap: 0.3rem; justify-content: center; }
             .status-separator { display: none; }
         }
     </style>
@@ -736,7 +612,6 @@
     <div class="vignette"></div>
     <div class="scan-line"></div>
 
-    <!-- STATUS BAR -->
     <div class="status-bar">
         <div class="status-left">
             <span>PZDB v42.20</span>
@@ -751,226 +626,103 @@
 
     <div class="container">
 
-        <!-- HEADER -->
         <header class="hub-header">
-            <h1 class="hub-title">Project Zomboid</h1>
+            <h1 class="hub-title" id="hub-title">Project Zomboid</h1>
             <p class="hub-subtitle">Survival Database <span>//</span> Build <span>42.20</span></p>
         </header>
 
-        <!-- SKILL CARDS -->
-        <div class="card-grid">
+        <div class="card-grid" id="card-grid">
 
-            <!-- 01: CARPENTRY -->
             <a href="carpentry.html" class="skill-card" style="--accent: #c49a6c; --accent-glow: rgba(196,154,108,0.3); --accent-dim: rgba(196,154,108,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art">
-                        <div class="art-placeholder">
-                            <span class="art-id">SKL-001</span>
-                            <span class="art-status">Awaiting Asset</span>
-                        </div>
-                        <div class="card-art-glow"></div>
-                    </div>
-                    <div class="card-name-bar">
-                        <span class="card-name">Carpentry</span>
-                        <span class="card-cost">★5</span>
-                    </div>
+                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-001</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-name-bar"><span class="card-name">Carpentry</span><span class="card-cost">★5</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Construction</div>
-                    <div class="card-body">
-                        <p class="card-desc">Structures, furniture, and fortifications. The backbone of any long-term survival base.</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-category">Base Building</span>
-                        <span class="card-arrow">→</span>
-                    </div>
+                    <div class="card-body"><p class="card-desc">Structures, furniture, and fortifications. The backbone of any long-term survival base.</p></div>
+                    <div class="card-footer"><span class="card-category">Base Building</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <!-- 02: CARVING -->
             <a href="carving.html" class="skill-card" style="--accent: #a8845a; --accent-glow: rgba(168,132,90,0.3); --accent-dim: rgba(168,132,90,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art">
-                        <div class="art-placeholder">
-                            <span class="art-id">SKL-002</span>
-                            <span class="art-status">Awaiting Asset</span>
-                        </div>
-                        <div class="card-art-glow"></div>
-                    </div>
-                    <div class="card-name-bar">
-                        <span class="card-name">Carving</span>
-                        <span class="card-cost">★3</span>
-                    </div>
+                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-002</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-name-bar"><span class="card-name">Carving</span><span class="card-cost">★3</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Woodwork</div>
-                    <div class="card-body">
-                        <p class="card-desc">Wooden weapons, tools, and carvings. Turning raw logs into survival essentials.</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-category">Weaponry</span>
-                        <span class="card-arrow">→</span>
-                    </div>
+                    <div class="card-body"><p class="card-desc">Wooden weapons, tools, and carvings. Turning raw logs into survival essentials.</p></div>
+                    <div class="card-footer"><span class="card-category">Weaponry</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <!-- 03: COOKING -->
             <a href="cooking.html" class="skill-card" style="--accent: #c45a4a; --accent-glow: rgba(196,90,74,0.3); --accent-dim: rgba(196,90,74,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art">
-                        <div class="art-placeholder">
-                            <span class="art-id">SKL-003</span>
-                            <span class="art-status">Awaiting Asset</span>
-                        </div>
-                        <div class="card-art-glow"></div>
-                    </div>
-                    <div class="card-name-bar">
-                        <span class="card-name">Cooking</span>
-                        <span class="card-cost">★4</span>
-                    </div>
+                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-003</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-name-bar"><span class="card-name">Cooking</span><span class="card-cost">★4</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Culinary</div>
-                    <div class="card-body">
-                        <p class="card-desc">Recipes, nutrition, and food preservation. Keeping hunger and morale from collapsing.</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-category">Sustenance</span>
-                        <span class="card-arrow">→</span>
-                    </div>
+                    <div class="card-body"><p class="card-desc">Recipes, nutrition, and food preservation. Keeping hunger and morale from collapsing.</p></div>
+                    <div class="card-footer"><span class="card-category">Sustenance</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <!-- 04: POTTERY -->
             <a href="pottery.html" class="skill-card" style="--accent: #c47a3a; --accent-glow: rgba(196,122,58,0.3); --accent-dim: rgba(196,122,58,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art">
-                        <div class="art-placeholder">
-                            <span class="art-id">SKL-004</span>
-                            <span class="art-status">Awaiting Asset</span>
-                        </div>
-                        <div class="card-art-glow"></div>
-                    </div>
-                    <div class="card-name-bar">
-                        <span class="card-name">Pottery</span>
-                        <span class="card-cost">★3</span>
-                    </div>
+                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-004</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-name-bar"><span class="card-name">Pottery</span><span class="card-cost">★3</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Ceramics</div>
-                    <div class="card-body">
-                        <p class="card-desc">Clay vessels, storage jars, and cooking pots. Fire, earth, and patience.</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-category">Storage</span>
-                        <span class="card-arrow">→</span>
-                    </div>
+                    <div class="card-body"><p class="card-desc">Clay vessels, storage jars, and cooking pots. Fire, earth, and patience.</p></div>
+                    <div class="card-footer"><span class="card-category">Storage</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <!-- 05: TAILORING -->
             <a href="tailoring.html" class="skill-card" style="--accent: #7a6ab0; --accent-glow: rgba(122,106,176,0.3); --accent-dim: rgba(122,106,176,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art">
-                        <div class="art-placeholder">
-                            <span class="art-id">SKL-005</span>
-                            <span class="art-status">Awaiting Asset</span>
-                        </div>
-                        <div class="card-art-glow"></div>
-                    </div>
-                    <div class="card-name-bar">
-                        <span class="card-name">Tailoring</span>
-                        <span class="card-cost">★4</span>
-                    </div>
+                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-005</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-name-bar"><span class="card-name">Tailoring</span><span class="card-cost">★4</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Textile</div>
-                    <div class="card-body">
-                        <p class="card-desc">Clothing repair, armor crafting, and fabric upgrades. Defending against bites and cold.</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-category">Defense</span>
-                        <span class="card-arrow">→</span>
-                    </div>
+                    <div class="card-body"><p class="card-desc">Clothing repair, armor crafting, and fabric upgrades. Defending against bites and cold.</p></div>
+                    <div class="card-footer"><span class="card-category">Defense</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <!-- 06: AGRICULTURE -->
             <a href="agriculture.html" class="skill-card" style="--accent: #5ab05a; --accent-glow: rgba(90,176,90,0.3); --accent-dim: rgba(90,176,90,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art">
-                        <div class="art-placeholder">
-                            <span class="art-id">SKL-006</span>
-                            <span class="art-status">Awaiting Asset</span>
-                        </div>
-                        <div class="card-art-glow"></div>
-                    </div>
-                    <div class="card-name-bar">
-                        <span class="card-name">Agriculture</span>
-                        <span class="card-cost">★5</span>
-                    </div>
+                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-006</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-name-bar"><span class="card-name">Agriculture</span><span class="card-cost">★5</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Farming</div>
-                    <div class="card-body">
-                        <p class="card-desc">Crop cycles, seasonal planting charts, and farming infrastructure. Infinite food, if you plan right.</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-category">Food Source</span>
-                        <span class="card-arrow">→</span>
-                    </div>
+                    <div class="card-body"><p class="card-desc">Crop cycles, seasonal planting charts, and farming infrastructure. Infinite food, if you plan right.</p></div>
+                    <div class="card-footer"><span class="card-category">Food Source</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <!-- 07: ANIMAL CARE & BUTCHERING -->
             <a href="animal-care.html" class="skill-card" style="--accent: #8b3a3a; --accent-glow: rgba(139,58,58,0.3); --accent-dim: rgba(139,58,58,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art">
-                        <div class="art-placeholder">
-                            <span class="art-id">SKL-007</span>
-                            <span class="art-status">Awaiting Asset</span>
-                        </div>
-                        <div class="card-art-glow"></div>
-                    </div>
-                    <div class="card-name-bar">
-                        <span class="card-name">Animal Care</span>
-                        <span class="card-cost">★4</span>
-                    </div>
+                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-007</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-name-bar"><span class="card-name">Animal Care</span><span class="card-cost">★4</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Livestock</div>
-                    <div class="card-body">
-                        <p class="card-desc">Livestock management, breeding, and meat processing. Living resources that need tending.</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-category">Resources</span>
-                        <span class="card-arrow">→</span>
-                    </div>
+                    <div class="card-body"><p class="card-desc">Livestock management, breeding, and meat processing. Living resources that need tending.</p></div>
+                    <div class="card-footer"><span class="card-category">Resources</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <!-- 08: TRACKING & TRAPPING -->
             <a href="tracking.html" class="skill-card" style="--accent: #6b7a3a; --accent-glow: rgba(107,122,58,0.3); --accent-dim: rgba(107,122,58,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art">
-                        <div class="art-placeholder">
-                            <span class="art-id">SKL-008</span>
-                            <span class="art-status">Awaiting Asset</span>
-                        </div>
-                        <div class="card-art-glow"></div>
-                    </div>
-                    <div class="card-name-bar">
-                        <span class="card-name">Tracking</span>
-                        <span class="card-cost">★3</span>
-                    </div>
+                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-008</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-name-bar"><span class="card-name">Tracking</span><span class="card-cost">★3</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Hunting</div>
-                    <div class="card-body">
-                        <p class="card-desc">Wildlife detection, trap construction, and hunting strategies. Reading the land for food.</p>
-                    </div>
-                    <div class="card-footer">
-                        <span class="card-category">Foraging</span>
-                        <span class="card-arrow">→</span>
-                    </div>
+                    <div class="card-body"><p class="card-desc">Wildlife detection, trap construction, and hunting strategies. Reading the land for food.</p></div>
+                    <div class="card-footer"><span class="card-category">Foraging</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
         </div>
 
-        <!-- CHANGELOG -->
         <section class="changelog">
             <h2 class="changelog-header"><span class="changelog-prompt">&gt;</span> Build 42.20 Notable Changes</h2>
             <ul class="changelog-list">
@@ -982,7 +734,6 @@
             </ul>
         </section>
 
-        <!-- FOOTER -->
         <footer class="hub-footer">
             web woven by <a href="https://cyrkonia04.com" target="_blank" rel="noopener noreferrer">cyrko</a>
         </footer>
@@ -990,14 +741,48 @@
     </div>
 
     <script>
-        /* ==========================================
-           1. PARTICLE CANVAS
-           ========================================== */
+        /* ==============================================
+           0. BOOT SEQUENCE TIMELINE
+           ============================================== */
+        const isMobile = window.innerWidth < 768;
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // Step 1: Status bar
+        setTimeout(() => document.querySelector('.status-bar').classList.add('visible'), 200);
+
+        // Step 2: Header
+        setTimeout(() => document.querySelector('.hub-header').classList.add('visible'), 500);
+
+        // Step 3: Cards deal in
+        const cards = document.querySelectorAll('.skill-card');
+        cards.forEach((card, i) => {
+            setTimeout(() => {
+                card.classList.add('dealt');
+                card.addEventListener('animationend', () => {
+                    card.classList.remove('dealt');
+                    card.classList.add('settled');
+                }, { once: true });
+            }, 900 + i * 150);
+        });
+
+        // Step 4: First title glitch (boot corruption)
+        setTimeout(() => triggerGlitch(true), 800);
+
+        // Step 5: Recurring glitch loop
+        setTimeout(() => setInterval(() => triggerGlitch(false), 5000), 5500);
+
+        // Step 6: Counter
+        setTimeout(startCounter, 1000);
+
+
+        /* ==============================================
+           1. DIGITAL PARTICLE SYSTEM
+           ============================================== */
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
-        const isMobile = window.innerWidth < 768;
-        const PARTICLE_COUNT = isMobile ? 12 : 30;
+        const PARTICLE_COUNT = isMobile ? 18 : 45;
+        const CONNECT_DIST = isMobile ? 80 : 130;
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -1006,73 +791,198 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // Seed particles
+        // Particle types: 0=square, 1=diamond, 2=line, 3=node(crosshair)
         for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const type = Math.random() < 0.25 ? 0 : Math.random() < 0.4 ? 1 : Math.random() < 0.75 ? 2 : 3;
+            const isNode = type === 3;
+            const isLine = type === 2;
+
+            let vx, vy, size;
+            if (isNode) {
+                vx = 0; vy = 0; size = 1.5;
+            } else if (isLine) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 0.3 + Math.random() * 0.5;
+                vx = Math.cos(angle) * speed;
+                vy = Math.sin(angle) * speed;
+                size = 4 + Math.random() * 6;
+            } else {
+                vx = (Math.random() - 0.5) * 0.35;
+                vy = (Math.random() - 0.5) * 0.35;
+                size = 1 + Math.random() * 1.5;
+            }
+
+            const colorRoll = Math.random();
+            let rgb;
+            if (colorRoll < 0.45) rgb = [74, 124, 89];        // Hub green
+            else if (colorRoll < 0.8) rgb = [140, 160, 195];   // Cool blue-white
+            else rgb = [100, 210, 110];                         // Bright green (rare)
+
             particles.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
-                vx: (Math.random() - 0.5) * 0.25,
-                vy: (Math.random() - 0.5) * 0.25,
-                size: Math.max(0.5, Math.random() * 1.5 + 0.3),
-                alpha: Math.random() * 0.25 + 0.05,
-                baseAlpha: 0,
-                // Mix of hub green and cool white
-                rgb: Math.random() > 0.65 ? '74,124,89' : '180,195,215',
-                flicker: Math.random() * Math.PI * 2, // Phase offset for flicker
-                flickerSpeed: 0.005 + Math.random() * 0.01
+                vx, vy, size, type, rgb,
+                baseAlpha: isNode ? 0.25 : 0.12 + Math.random() * 0.18,
+                alpha: 0,
+                phase: Math.random() * Math.PI * 2,
+                phaseSpeed: 0.015 + Math.random() * 0.025,
+                pulseTimer: 150 + Math.random() * 400,
+                pulsing: false, pulseLeft: 0
             });
-            particles[i].baseAlpha = particles[i].alpha;
         }
 
-        function animateParticles() {
+        function drawParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
+
+            // Draw connections first (behind particles)
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < Math.min(i + 8, particles.length); j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < CONNECT_DIST) {
+                        const a = (1 - dist / CONNECT_DIST) * 0.07;
+                        ctx.strokeStyle = `rgba(74,124,89,${a})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw particles
+            for (const p of particles) {
                 p.x += p.vx;
                 p.y += p.vy;
-                p.flicker += p.flickerSpeed;
+                p.phase += p.phaseSpeed;
 
-                // Wrap around edges
-                if (p.x < -5) p.x = canvas.width + 5;
-                if (p.x > canvas.width + 5) p.x = -5;
-                if (p.y < -5) p.y = canvas.height + 5;
-                if (p.y > canvas.height + 5) p.y = -5;
+                // Wrap
+                if (p.x < -15) p.x = canvas.width + 15;
+                if (p.x > canvas.width + 15) p.x = -15;
+                if (p.y < -15) p.y = canvas.height + 15;
+                if (p.y > canvas.height + 15) p.y = -15;
 
-                // Gentle alpha flicker
-                p.alpha = p.baseAlpha + Math.sin(p.flicker) * 0.06;
+                // Alpha
+                p.alpha = p.baseAlpha + Math.sin(p.phase) * 0.06;
 
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${p.rgb}, ${Math.max(0, p.alpha)})`;
-                ctx.fill();
-            });
-            requestAnimationFrame(animateParticles);
+                // Pulse
+                if (p.pulsing) {
+                    p.alpha = p.baseAlpha + 0.45;
+                    p.pulseLeft--;
+                    if (p.pulseLeft <= 0) { p.pulsing = false; p.pulseTimer = 150 + Math.random() * 500; }
+                } else {
+                    p.pulseTimer--;
+                    if (p.pulseTimer <= 0) { p.pulsing = true; p.pulseLeft = 6 + Math.floor(Math.random() * 12); }
+                }
+
+                const a = Math.max(0, Math.min(1, p.alpha));
+                const [r, g, b] = p.rgb;
+                const s = p.size;
+
+                ctx.save();
+
+                if (p.type === 0) {
+                    // Square
+                    ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+                    ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s);
+                } else if (p.type === 1) {
+                    // Diamond
+                    ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(Math.PI / 4);
+                    ctx.fillRect(-s / 2, -s / 2, s, s);
+                } else if (p.type === 2) {
+                    // Directional line
+                    const angle = Math.atan2(p.vy, p.vx);
+                    const halfLen = s / 2;
+                    ctx.strokeStyle = `rgba(${r},${g},${b},${a})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x - Math.cos(angle) * halfLen, p.y - Math.sin(angle) * halfLen);
+                    ctx.lineTo(p.x + Math.cos(angle) * halfLen, p.y + Math.sin(angle) * halfLen);
+                    ctx.stroke();
+                } else {
+                    // Node: dot + crosshair
+                    ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, Math.max(0.5, s), 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = `rgba(${r},${g},${b},${a * 0.4})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(p.x - s * 2.5, p.y);
+                    ctx.lineTo(p.x + s * 2.5, p.y);
+                    ctx.moveTo(p.x, p.y - s * 2.5);
+                    ctx.lineTo(p.x, p.y + s * 2.5);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+
+            requestAnimationFrame(drawParticles);
         }
-        animateParticles();
+        drawParticles();
 
-        /* ==========================================
-           2. ENTRY COUNTER ANIMATION
-           ========================================== */
+
+        /* ==============================================
+           2. ENTRY COUNTER
+           ============================================== */
         const counterEl = document.getElementById('counter');
         let currentCount = 0;
-        const targetCount = 8;
 
-        function tickCounter() {
-            if (currentCount < targetCount) {
+        function startCounter() {
+            if (currentCount < 8) {
                 currentCount++;
                 counterEl.textContent = currentCount;
-                setTimeout(tickCounter, 120 + Math.random() * 80);
+                setTimeout(startCounter, 100 + Math.random() * 100);
             }
         }
-        // Start counting after status bar appears
-        setTimeout(tickCounter, 800);
 
-        /* ==========================================
-           3. 3D CARD TILT + HOLOGRAPHIC GLARE
-           ========================================== */
-        const cards = document.querySelectorAll('.skill-card');
-        const MAX_TILT = 14; // Max degrees of rotation
+
+        /* ==============================================
+           3. TITLE GLITCH (JS-driven character corruption)
+           ============================================== */
+        const titleEl = document.getElementById('hub-title');
+        const originalTitle = titleEl.textContent;
+        const glitchChars = '!@#$%<>[]{}|/\\*^~';
+
+        function triggerGlitch(isBoot) {
+            const chars = originalTitle.split('');
+            const intensity = isBoot ? 0.5 : 0.35; // Boot glitch is more severe
+
+            // Phase 1: Full corruption
+            let corrupted = chars.map(() => Math.random() < intensity ? glitchChars[Math.floor(Math.random() * glitchChars.length)] : null);
+            titleEl.textContent = corrupted.map(c => c !== null ? c : ' ').join('');
+            titleEl.style.textShadow = '3px 0 #c45a4a, -3px 0 #5ab05a, 0 0 8px rgba(196,90,74,0.3)';
+            titleEl.style.transform = `translateX(${(Math.random() - 0.5) * 8}px)`;
+
+            // Phase 2: Partial recovery
+            setTimeout(() => {
+                corrupted = chars.map((c, i) => (i % 3 === 0 && Math.random() < intensity) ? glitchChars[Math.floor(Math.random() * glitchChars.length)] : null);
+                titleEl.textContent = corrupted.map((c, i) => c !== null ? c : chars[i]).join('');
+                titleEl.style.transform = `translateX(${(Math.random() - 0.5) * 4}px)`;
+            }, isBoot ? 250 : 180);
+
+            // Phase 3: Clean
+            setTimeout(() => {
+                titleEl.textContent = originalTitle;
+                titleEl.style.textShadow = 'none';
+                titleEl.style.transform = 'none';
+            }, isBoot ? 500 : 350);
+        }
+
+
+        /* ==============================================
+           4. 3D CARD TILT + HOLOGRAPHIC GLARE
+           ============================================== */
+        const MAX_TILT = isMobile ? 0 : 14;
 
         cards.forEach(card => {
+            if (isTouchDevice) return; // Skip on touch
+
             const inner = card.querySelector('.card-inner');
             const glare = card.querySelector('.card-glare');
 
@@ -1080,19 +990,17 @@
                 const rect = card.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
+                const cx = rect.width / 2;
+                const cy = rect.height / 2;
 
-                // Calculate tilt (inverted Y so it follows the mouse naturally)
-                const rotateY = ((x - centerX) / centerX) * MAX_TILT;
-                const rotateX = ((y - centerY) / centerY) * -MAX_TILT;
+                const rotateY = ((x - cx) / cx) * MAX_TILT;
+                const rotateX = ((y - cy) / cy) * -MAX_TILT;
 
                 inner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
 
-                // Holographic glare follows cursor
-                const glareX = (x / rect.width) * 100;
-                const glareY = (y / rect.height) * 100;
-                glare.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 35%, transparent 65%)`;
+                const gx = (x / rect.width) * 100;
+                const gy = (y / rect.height) * 100;
+                glare.style.background = `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 35%, transparent 65%)`;
             });
 
             card.addEventListener('mouseleave', () => {
@@ -1101,50 +1009,44 @@
             });
         });
 
-        /* ==========================================
-           4. RELEASE CARD ANIMATIONS AFTER ENTRANCE
-              (Allows hover transitions to take over)
-           ========================================== */
-        setTimeout(() => {
-            cards.forEach(card => {
-                card.style.animation = 'none';
-                card.style.opacity = '1';
-                card.style.transform = 'none';
+
+        /* ==============================================
+           5. FOCUS DIM (JS-triggered, only on card hover)
+           ============================================== */
+        const grid = document.getElementById('card-grid');
+        let overCard = false;
+
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                overCard = true;
+                grid.classList.add('has-focus');
             });
-        }, 2200);
+            card.addEventListener('mouseleave', () => {
+                overCard = false;
+                setTimeout(() => {
+                    if (!overCard) grid.classList.remove('has-focus');
+                }, 30);
+            });
+        });
 
-        /* ==========================================
-           5. CHANGELOG SCROLL REVEAL
-           ========================================== */
+
+        /* ==============================================
+           6. CHANGELOG SCROLL REVEAL
+           ============================================== */
         const changelogItems = document.querySelectorAll('.changelog-list li');
-
-        const revealObserver = new IntersectionObserver((entries) => {
+        const revealObs = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('revealed');
-                    revealObserver.unobserve(entry.target);
+                    revealObs.unobserve(entry.target);
                 }
             });
         }, { threshold: 0.15 });
 
         changelogItems.forEach((li, i) => {
             li.style.transitionDelay = `${i * 0.08}s`;
-            revealObserver.observe(li);
+            revealObs.observe(li);
         });
-
-        /* ==========================================
-           6. DISABLE 3D TILT ON TOUCH DEVICES
-           ========================================== */
-        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-            cards.forEach(card => {
-                const inner = card.querySelector('.card-inner');
-                const glare = card.querySelector('.card-glare');
-                // Kill the 3D — flat hover only
-                inner.style.transformStyle = 'flat';
-                inner.style.willChange = 'auto';
-                glare.style.display = 'none';
-            });
-        }
     </script>
 </body>
 </html>

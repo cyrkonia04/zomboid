@@ -75,6 +75,18 @@
             pointer-events: none;
         }
 
+        /* Film grain overlay */
+        .grain {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            pointer-events: none;
+            opacity: 0.028;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 200px 200px;
+        }
+
         #particle-canvas {
             position: fixed;
             top: 0;
@@ -83,7 +95,6 @@
             pointer-events: none;
         }
 
-        /* Scan line: faint, JS-driven */
         #scan-line {
             position: fixed;
             left: 0;
@@ -174,7 +185,7 @@
 
         .hub-header {
             text-align: center;
-            margin-bottom: 3.5rem;
+            margin-bottom: 2rem;
             opacity: 0;
             transform: translateY(-10px);
             transition: opacity 0.6s ease, transform 0.6s ease;
@@ -211,6 +222,46 @@
             text-transform: uppercase;
         }
         .hub-subtitle span { color: var(--hub-accent); }
+
+        /* Data readout strip */
+        .data-strip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 2.5rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.5s ease 0.8s, transform 0.5s ease 0.8s;
+        }
+        .data-strip.visible { opacity: 0.5; transform: translateY(0); }
+
+        .data-seg {
+            padding: 0.35rem 0.8rem;
+            border: 1px solid var(--border-dim);
+            border-right: none;
+            white-space: nowrap;
+        }
+        .data-seg:last-child {
+            border-right: 1px solid var(--border-dim);
+        }
+        .data-seg .data-label {
+            color: var(--border-subtle);
+            margin-right: 0.4rem;
+        }
+        .data-seg .data-val {
+            color: var(--hub-accent);
+            font-weight: 600;
+        }
+        .data-seg.data-highlight {
+            background: rgba(74, 124, 89, 0.06);
+        }
 
         .card-grid {
             display: grid;
@@ -390,6 +441,37 @@
             -webkit-box-orient: vertical; overflow: hidden;
         }
 
+        /* Entries metadata: hidden by default, revealed on hover */
+        .card-entries {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 0 0.7rem;
+            border-bottom: 1px solid var(--border-dim);
+            margin-bottom: 0.1rem;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: opacity 0.35s ease, max-height 0.35s ease, padding 0.35s ease 0.35s ease, margin-bottom 0.35s ease;
+        }
+        .skill-card.settled:hover .card-entries {
+            opacity: 1;
+            max-height: 1.5rem;
+            padding-bottom: 0.35rem;
+            margin-bottom: 0.1rem;
+        }
+        .card-entries .entries-label {
+            color: var(--border-subtle);
+            margin-right: 0.4rem;
+        }
+        .card-entries .entries-count {
+            color: var(--hub-accent);
+            font-weight: 600;
+        }
+
         .card-footer {
             flex-shrink: 0; padding: 0.4rem 0.7rem;
             background: var(--accent-dim);
@@ -438,6 +520,19 @@
             letter-spacing: 0.1em; text-transform: uppercase;
             padding: 1px 6px; border-radius: 2px;
             margin-right: 0.5rem; vertical-align: middle;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+        .changelog-tag:hover {
+            background: rgba(74, 124, 89, 0.15) !important;
+            color: #8bc49a !important;
+            border-color: rgba(74, 124, 89, 0.4) !important;
+        }
+        .changelog-tag.active-tag {
+            background: rgba(74, 124, 89, 0.2) !important;
+            color: #8bc49a !important;
+            border-color: rgba(74, 124, 89, 0.5) !important;
+            box-shadow: 0 0 8px rgba(74, 124, 89, 0.15);
         }
 
         .hub-footer {
@@ -458,9 +553,10 @@
         @media (prefers-reduced-motion: reduce) {
             .skill-card::before, .pulse-dot { animation: none !important; }
             .skill-card { opacity: 1 !important; visibility: visible !important; }
-            .status-bar, .hub-header { opacity: 1 !important; transform: none !important; }
+            .status-bar, .hub-header, .data-strip { opacity: 1 !important; transform: none !important; }
             .changelog-list li { opacity: 1 !important; transform: none !important; }
             .skill-card.settled { transition: none !important; }
+            .card-entries { transition: none !important; }
         }
 
         @media (max-width: 1100px) { .card-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -471,6 +567,8 @@
             .card-name { font-size: 1rem; }
             .card-desc { font-size: 0.75rem; -webkit-line-clamp: 3; }
             .status-bar { padding: 0.4rem 1rem; font-size: 0.65rem; }
+            .data-strip { flex-wrap: wrap; justify-content: center; }
+            .data-seg { font-size: 0.6rem; padding: 0.25rem 0.5rem; }
         }
         @media (max-width: 480px) {
             .container { padding: 1.5rem 0.75rem 3rem; }
@@ -479,6 +577,9 @@
             .card-grid { grid-template-columns: 1fr; gap: 1rem; max-width: 320px; margin-left: auto; margin-right: auto; }
             .status-bar { flex-wrap: wrap; gap: 0.3rem; justify-content: center; }
             .status-separator { display: none; }
+            .data-strip { gap: 0; }
+            .data-seg { border-right: none; border-bottom: 1px solid var(--border-dim); }
+            .data-seg:last-child { border-right: 1px solid var(--border-dim); border-bottom: none; }
         }
     </style>
 </head>
@@ -486,6 +587,7 @@
 
     <canvas id="particle-canvas"></canvas>
     <div class="vignette"></div>
+    <div class="grain"></div>
     <div id="scan-line"></div>
 
     <div class="status-bar">
@@ -507,91 +609,123 @@
             <p class="hub-subtitle">Survival Database <span>//</span> Build <span>42.20</span></p>
         </header>
 
+        <!-- Data readout strip -->
+        <div class="data-strip" id="data-strip">
+            <div class="data-seg data-highlight"><span class="data-label">Skill Tree:</span><span class="data-val">8 Branches</span></div>
+            <div class="data-seg"><span class="data-label">Build:</span><span class="data-val">42.20</span></div>
+            <div class="data-seg"><span class="data-label">Total Entries:</span><span class="data-val" id="total-entries">124</span></div>
+            <div class="data-seg data-highlight"><span class="data-label">Status:</span><span class="data-val">Active</span></div>
+        </div>
+
         <div class="card-grid" id="card-grid">
 
-            <a href="carpentry.html" class="skill-card" style="--accent: #c49a6c; --accent-glow: rgba(196,154,108,0.3); --accent-dim: rgba(196,154,108,0.12);" tabindex="0">
+            <a href="carpentry.html" class="skill-card" data-entries="18" style="--accent: #c49a6c; --accent-glow: rgba(196,154,108,0.3); --accent-dim: rgba(196,154,108,0.12);" tabindex="0">
                 <div class="card-inner">
                     <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-001</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
                     <div class="card-name-bar"><span class="card-name">Carpentry</span><span class="card-cost">★5</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Construction</div>
-                    <div class="card-body"><p class="card-desc">Structures, furniture, and fortifications. The backbone of any long-term survival base.</p></div>
+                    <div class="card-body">
+                        <p class="card-desc">Structures, furniture, and fortifications. The backbone of any long-term survival base.</p>
+                        <div class="card-entries"><span class="entries-label">Entries:</span><span class="entries-count">18</span></div>
+                    </div>
                     <div class="card-footer"><span class="card-category">Base Building</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <a href="carving.html" class="skill-card" style="--accent: #a8845a; --accent-glow: rgba(168,132,90,0.3); --accent-dim: rgba(168,132,90,0.12);" tabindex="0">
+            <a href="carving.html" class="skill-card" data-entries="12" style="--accent: #a8845a; --accent-glow: rgba(168,132,90,0.3); --accent-dim: rgba(168,132,90,0.12);" tabindex="0">
                 <div class="card-inner">
                     <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-002</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
                     <div class="card-name-bar"><span class="card-name">Carving</span><span class="card-cost">★3</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Woodwork</div>
-                    <div class="card-body"><p class="card-desc">Wooden weapons, tools, and carvings. Turning raw logs into survival essentials.</p></div>
+                    <div class="card-body">
+                        <p class="card-desc">Wooden weapons, tools, and carvings. Turning raw logs into survival essentials.</p>
+                        <div class="card-entries"><span class="entries-label">Entries:</span><span class="entries-count">12</span></div>
+                    </div>
                     <div class="card-footer"><span class="card-category">Weaponry</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <a href="cooking.html" class="skill-card" style="--accent: #c45a4a; --accent-glow: rgba(196,90,74,0.3); --accent-dim: rgba(196,90,74,0.12);" tabindex="0">
+            <a href="cooking.html" class="skill-card" data-entries="22" style="--accent: #c45a4a; --accent-glow: rgba(196,90,74,0.3); --accent-dim: rgba(196,90,74,0.12);" tabindex="0">
                 <div class="card-inner">
                     <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-003</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
                     <div class="card-name-bar"><span class="card-name">Cooking</span><span class="card-cost">★4</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Culinary</div>
-                    <div class="card-body"><p class="card-desc">Recipes, nutrition, and food preservation. Keeping hunger and morale from collapsing.</p></div>
+                    <div class="card-body">
+                        <p class="card-desc">Recipes, nutrition, and food preservation. Keeping hunger and morale from collapsing.</p>
+                        <div class="card-entries"><span class="entries-label">Entries:</span><span class="entries-count">22</span></div>
+                    </div>
                     <div class="card-footer"><span class="card-category">Sustenance</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <a href="pottery.html" class="skill-card" style="--accent: #c47a3a; --accent-glow: rgba(196,122,58,0.3); --accent-dim: rgba(196,122,58,0.12);" tabindex="0">
+            <a href="pottery.html" class="skill-card" data-entries="8" style="--accent: #c47a3a; --accent-glow: rgba(196,122,58,0.3); --accent-dim: rgba(196,122,58,0.12);" tabindex="0">
                 <div class="card-inner">
                     <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-004</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
                     <div class="card-name-bar"><span class="card-name">Pottery</span><span class="card-cost">★3</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Ceramics</div>
-                    <div class="card-body"><p class="card-desc">Clay vessels, storage jars, and cooking pots. Fire, earth, and patience.</p></div>
+                    <div class="card-body">
+                        <p class="card-desc">Clay vessels, storage jars, and cooking pots. Fire, earth, and patience.</p>
+                        <div class="card-entries"><span class="entries-label">Entries:</span><span class="entries-count">8</span></div>
+                    </div>
                     <div class="card-footer"><span class="card-category">Storage</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <a href="tailoring.html" class="skill-card" style="--accent: #7a6ab0; --accent-glow: rgba(122,106,176,0.3); --accent-dim: rgba(122,106,176,0.12);" tabindex="0">
+            <a href="tailoring.html" class="skill-card" data-entries="15" style="--accent: #7a6ab0; --accent-glow: rgba(122,106,176,0.3); --accent-dim: rgba(122,106,176,0.12);" tabindex="0">
                 <div class="card-inner">
                     <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-005</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
                     <div class="card-name-bar"><span class="card-name">Tailoring</span><span class="card-cost">★4</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Textile</div>
-                    <div class="card-body"><p class="card-desc">Clothing repair, armor crafting, and fabric upgrades. Defending against bites and cold.</p></div>
+                    <div class="card-body">
+                        <p class="card-desc">Clothing repair, armor crafting, and fabric upgrades. Defending against bites and cold.</p>
+                        <div class="card-entries"><span class="entries-label">Entries:</span><span class="entries-count">15</span></div>
+                    </div>
                     <div class="card-footer"><span class="card-category">Defense</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <a href="agriculture.html" class="skill-card" style="--accent: #5ab05a; --accent-glow: rgba(90,176,90,0.3); --accent-dim: rgba(90,176,90,0.12);" tabindex="0">
+            <a href="agriculture.html" class="skill-card" data-entries="24" style="--accent: #5ab05a; --accent-glow: rgba(90,176,90,0.3); --accent-dim: rgba(90,176,90,0.12);" tabindex="0">
                 <div class="card-inner">
                     <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-006</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
                     <div class="card-name-bar"><span class="card-name">Agriculture</span><span class="card-cost">★5</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Farming</div>
-                    <div class="card-body"><p class="card-desc">Crop cycles, seasonal planting charts, and farming infrastructure. Infinite food, if you plan right.</p></div>
+                    <div class="card-body">
+                        <p class="card-desc">Crop cycles, seasonal planting charts, and farming infrastructure. Infinite food, if you plan right.</p>
+                        <div class="card-entries"><span class="entries-label">Entries:</span><span class="entries-count">24</span></div>
+                    </div>
                     <div class="card-footer"><span class="card-category">Food Source</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <a href="animal-care.html" class="skill-card" style="--accent: #8b3a3a; --accent-glow: rgba(139,58,58,0.3); --accent-dim: rgba(139,58,58,0.12);" tabindex="0">
+            <a href="animal-care.html" class="skill-card" data-entries="16" style="--accent: #8b3a3a; --accent-glow: rgba(139,58,58,0.3); --accent-dim: rgba(139,58,58,0.12);" tabindex="0">
                 <div class="card-inner">
                     <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-007</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
                     <div class="card-name-bar"><span class="card-name">Animal Care</span><span class="card-cost">★4</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Livestock</div>
-                    <div class="card-body"><p class="card-desc">Livestock management, breeding, and meat processing. Living resources that need tending.</p></div>
+                    <div class="card-body">
+                        <p class="card-desc">Livestock management, breeding, and meat processing. Living resources that need tending.</p>
+                        <div class="card-entries"><span class="entries-label">Entries:</span><span class="entries-count">16</span></div>
+                    </div>
                     <div class="card-footer"><span class="card-category">Resources</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
-            <a href="tracking.html" class="skill-card" style="--accent: #6b7a3a; --accent-glow: rgba(107,122,58,0.3); --accent-dim: rgba(107,122,58,0.12);" tabindex="0">
+            <a href="tracking.html" class="skill-card" data-entries="9" style="--accent: #6b7a3a; --accent-glow: rgba(107,122,58,0.3); --accent-dim: rgba(107,122,58,0.12);" tabindex="0">
                 <div class="card-inner">
                     <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-008</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
                     <div class="card-name-bar"><span class="card-name">Tracking</span><span class="card-cost">★3</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Hunting</div>
-                    <div class="card-body"><p class="card-desc">Wildlife detection, trap construction, and hunting strategies. Reading the land for food.</p></div>
+                    <div class="card-body">
+                        <p class="card-desc">Wildlife detection, trap construction, and hunting strategies. Reading the land for food.</p>
+                        <div class="card-entries"><span class="entries-label">Entries:</span><span class="entries-count">9</span></div>
+                    </div>
                     <div class="card-footer"><span class="card-category">Foraging</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
@@ -601,12 +735,12 @@
 
         <section class="changelog">
             <h2 class="changelog-header"><span class="changelog-prompt">&gt;</span> Build 42.20 Notable Changes</h2>
-            <ul class="changelog-list">
-                <li><span class="changelog-tag" style="background:rgba(196,122,58,0.15);color:#c47a3a;">NEW</span> Pottery skill introduced — clay gathering, firing, and vessel crafting</li>
-                <li><span class="changelog-tag" style="background:rgba(90,176,90,0.15);color:#5ab05a;">OVERHAUL</span> Agriculture reworked — new crop growth system and seasonal modifiers</li>
-                <li><span class="changelog-tag" style="background:rgba(196,154,108,0.15);color:#c49a6c;">UPDATE</span> Carpentry — new furniture recipes and multi-tile structure improvements</li>
-                <li><span class="changelog-tag" style="background:rgba(196,90,74,0.15);color:#c45a4a;">UPDATE</span> Cooking — nutrition values rebalanced, new preservation methods</li>
-                <li><span class="changelog-tag" style="background:rgba(139,58,58,0.15);color:#8b3a3a;">UPDATE</span> Animal handling — new breeding mechanics and butchering yield changes</li>
+            <ul class="changelog-list" id="changelog-list">
+                <li data-tag="new"><span class="changelog-tag" style="background:rgba(196,122,58,0.15);color:#c47a3a;">NEW</span> Pottery skill introduced — clay gathering, firing, and vessel crafting</li>
+                <li data-tag="overhaul"><span class="changelog-tag" style="background:rgba(90,176,90,0.15);color:#5ab05a;">OVERHAUL</span> Agriculture reworked — new crop growth system and seasonal modifiers</li>
+                <li data-tag="update"><span class="changelog-tag" style="background:rgba(196,154,108,0.15);color:#c49a6c;">UPDATE</span> Carpentry — new furniture recipes and multi-tile structure improvements</li>
+                <li data-tag="update"><span class="changelog-tag" style="background:rgba(196,90,74,0.15);color:#c45a4a;">UPDATE</span> Cooking — nutrition values rebalanced, new preservation methods</li>
+                <li data-tag="update"><span class="changelog-tag" style="background:rgba(139,58,58,0.15);color:#8b3a3a;">UPDATE</span> Animal handling — new breeding mechanics and butchering yield changes</li>
             </ul>
         </section>
 
@@ -627,6 +761,13 @@
            ============================================== */
         setTimeout(() => document.querySelector('.status-bar').classList.add('visible'), 200);
         setTimeout(() => document.querySelector('.hub-header').classList.add('visible'), 500);
+        setTimeout(() => document.getElementById('data-strip').classList.add('visible'), 800);
+
+        // Calculate total entries from data attributes
+        const totalEntriesEl = document.getElementById('total-entries');
+        const totalEntries = Array.from(document.querySelectorAll('.skill-card[data-entries]'))
+            .reduce((sum, c) => sum + parseInt(c.dataset.entries || 0), 0);
+        totalEntriesEl.textContent = totalEntries;
 
         const counterEl = document.getElementById('counter');
         let currentCount = 0;
@@ -663,47 +804,44 @@
 
 
         /* ==============================================
-           SCAN LINE — fast sweep, 15s cooldown, particle trail
+           SCAN LINE — fast sweep, 15s cooldown, FIXED trail particles
            ============================================== */
         const scanEl = document.getElementById('scan-line');
-        const SWEEP_DURATION = 3500;   // 3.5 second sweep
-        const COOLDOWN_DURATION = 15000; // 15 second pause
-        const SWEEP_PX = viewH / (SWEEP_DURATION / 1000 * 60); // px per frame at 60fps
+        const SWEEP_DURATION = 3500;
+        const COOLDOWN_DURATION = 15000;
+        const SWEEP_PX = viewH / (SWEEP_DURATION / 1000 * 60);
 
         let scanY = -100;
-        let scanState = 'sweep'; // 'sweep' or 'cooldown'
+        let scanState = 'sweep';
         let scanTimer = 0;
+        let scanTrail = [];
 
         scanEl.style.display = 'block';
-
-        // Trail particles spawned by the scan line
-        let scanTrail = [];
 
         function tickScan() {
             if (scanState === 'sweep') {
                 scanY += SWEEP_PX;
 
-                // Spawn 2-3 trail particles every frame along the line
                 for (let i = 0; i < 2 + Math.floor(Math.random() * 2); i++) {
                     scanTrail.push({
                         x: Math.random() * window.innerWidth,
-                        y: scanY + 50, // Bottom edge of the scan element
+                        // Store as screen-space Y directly — no scroll conversion needed
+                        screenY: scanY + 50,
                         size: 1 + Math.random() * 2.5,
                         alpha: 0.3 + Math.random() * 0.25,
-                        life: 40 + Math.floor(Math.random() * 30), // Frames to live
-                        maxLife: 0, // Set below
-                        vy: 0.1 + Math.random() * 0.3 // Slight downward drift
+                        life: 40 + Math.floor(Math.random() * 30),
+                        maxLife: 0,
+                        vy: 0.1 + Math.random() * 0.3
                     });
                     scanTrail[scanTrail.length - 1].maxLife = scanTrail[scanTrail.length - 1].life;
                 }
 
                 if (scanY > viewH + 100) {
                     scanState = 'cooldown';
-                    scanTimer = COOLDOWN_DURATION / (1000 / 60); // Convert ms to frames
+                    scanTimer = COOLDOWN_DURATION / (1000 / 60);
                     scanEl.style.display = 'none';
                 }
             } else {
-                // Cooldown: count down frames
                 scanTimer--;
                 if (scanTimer <= 0) {
                     scanState = 'sweep';
@@ -777,7 +915,7 @@
             const vb = sy + canvas.height + 20;
             const vt = sy - 20;
 
-            // Connections between main particles
+            // Connections
             for (let i = 0; i < particles.length; i++) {
                 const pi = particles[i];
                 if (pi.y < vt || pi.y > vb) continue;
@@ -798,7 +936,7 @@
                 }
             }
 
-            // Draw main particles
+            // Main particles
             for (const p of particles) {
                 p.x += p.vx; p.y += p.vy; p.phase += p.ps;
                 if (p.x < -15) p.x = canvas.width + 15;
@@ -850,10 +988,10 @@
                 ctx.restore();
             }
 
-            // Draw and update scan trail particles
+            // Scan trail: draw at raw screenY, no scroll offset
             for (let i = scanTrail.length - 1; i >= 0; i--) {
                 const t = scanTrail[i];
-                t.y += t.vy;
+                t.screenY += t.vy;
                 t.life--;
 
                 if (t.life <= 0) {
@@ -861,19 +999,17 @@
                     continue;
                 }
 
-                // Fade out over lifetime
                 const progress = t.life / t.maxLife;
                 const a = t.alpha * progress;
-                const screenY = t.y - sy;
+                const sy2 = t.screenY;
 
-                // Skip if off-screen
-                if (screenY < -10 || screenY > canvas.height + 10) {
+                if (sy2 < -10 || sy2 > canvas.height + 10) {
                     scanTrail.splice(i, 1);
                     continue;
                 }
 
                 ctx.fillStyle = 'rgba(74,124,89,' + Math.max(0, a).toFixed(3) + ')';
-                ctx.fillRect(t.x - t.size / 2, screenY - t.size / 2, t.size, t.size);
+                ctx.fillRect(t.x - t.size / 2, sy2 - t.size / 2, t.size, t.size);
             }
 
             requestAnimationFrame(drawParticles);
@@ -953,9 +1089,43 @@
 
 
         /* ==============================================
+           CHANGELOG — tag filtering
+           ============================================== */
+        const changelogList = document.getElementById('changelog-list');
+        const changelogTags = changelogList.querySelectorAll('.changelog-tag');
+        const changelogItems = changelogList.querySelectorAll('li');
+        let activeFilter = 'all';
+
+        function filterChangelog(tag) {
+            if (activeFilter === tag) {
+                activeFilter = 'all';
+                changelogTags.forEach(t => t.classList.remove('active-tag'));
+            } else {
+                activeFilter = tag;
+                changelogTags.forEach(t => {
+                    t.classList.toggle('active-tag', t.getAttribute('data-tag') === tag);
+                });
+            }
+            changelogItems.forEach(li => {
+                if (activeFilter === 'all' || li.getAttribute('data-tag') === activeFilter) {
+                    li.style.display = '';
+                } else {
+                    li.style.display = 'none';
+                }
+            });
+        }
+
+        changelogTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                filterChangelog(tag.getAttribute('data-tag'));
+            });
+        });
+
+
+        /* ==============================================
            CHANGELOG SCROLL REVEAL
            ============================================== */
-        const changelogItems = document.querySelectorAll('.changelog-list li');
+        const changelogObsItems = changelogList.querySelectorAll('li');
         const revealObs = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -965,7 +1135,7 @@
             });
         }, { threshold: 0.15 });
 
-        changelogItems.forEach((li, i) => {
+        changelogObsItems.forEach((li, i) => {
             li.style.transitionDelay = (i * 0.08) + 's';
             revealObs.observe(li);
         });

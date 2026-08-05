@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=0.95">
     <title>Project Zomboid Database // Build 42.20</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -395,25 +395,18 @@
         }
         .skill-card:hover .card-art::after { border-color: var(--accent-dim); }
 
-        .art-placeholder {
-            position: absolute; inset: 0;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center; gap: 0.4rem;
+        .card-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
-        .art-id {
-            font-family: 'Rajdhani', sans-serif; font-size: 0.65rem;
-            font-weight: 600; color: var(--text-muted);
-            letter-spacing: 0.15em; opacity: 0.6;
-        }
-        .art-status {
-            font-family: 'Rajdhani', sans-serif; font-size: 0.7rem;
-            font-weight: 500; color: var(--border-subtle);
-            letter-spacing: 0.1em; text-transform: uppercase;
-        }
+
         .card-art-glow {
             position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
             opacity: 0; transition: opacity 0.3s;
+            z-index: 2;
         }
         .skill-card:hover .card-art-glow { opacity: 0.7; }
 
@@ -608,7 +601,10 @@
 
             <a href="carpentry.html" class="skill-card" data-entries="18" style="--accent: #c49a6c; --accent-glow: rgba(196,154,108,0.3); --accent-dim: rgba(196,154,108,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-001</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-art">
+                        <img src="images/carpentry.png" alt="Carpentry">
+                        <div class="card-art-glow"></div>
+                    </div>
                     <div class="card-name-bar"><span class="card-name">Carpentry</span><span class="card-cost">★5</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Construction</div>
                     <div class="card-body">
@@ -622,7 +618,10 @@
 
             <a href="carving.html" class="skill-card" data-entries="12" style="--accent: #a8845a; --accent-glow: rgba(168,132,90,0.3); --accent-dim: rgba(168,132,90,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-002</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-art">
+                        <img src="images/carving.png" alt="Carving">
+                        <div class="card-art-glow"></div>
+                    </div>
                     <div class="card-name-bar"><span class="card-name">Carving</span><span class="card-cost">★3</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Woodwork</div>
                     <div class="card-body">
@@ -636,7 +635,10 @@
 
             <a href="cooking.html" class="skill-card" data-entries="22" style="--accent: #c45a4a; --accent-glow: rgba(196,90,74,0.3); --accent-dim: rgba(196,90,74,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-003</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-art">
+                        <img src="images/cooking.png" alt="Cooking">
+                        <div class="card-art-glow"></div>
+                    </div>
                     <div class="card-name-bar"><span class="card-name">Cooking</span><span class="card-cost">★4</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Culinary</div>
                     <div class="card-body">
@@ -650,7 +652,10 @@
 
             <a href="pottery.html" class="skill-card" data-entries="8" style="--accent: #c47a3a; --accent-glow: rgba(196,122,58,0.3); --accent-dim: rgba(196,122,58,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-004</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-art">
+                        <img src="images/pottery.png" alt="Pottery">
+                        <div class="card-art-glow"></div>
+                    </div>
                     <div class="card-name-bar"><span class="card-name">Pottery</span><span class="card-cost">★3</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Ceramics</div>
                     <div class="card-body">
@@ -664,7 +669,10 @@
 
             <a href="tailoring.html" class="skill-card" data-entries="15" style="--accent: #7a6ab0; --accent-glow: rgba(122,106,176,0.3); --accent-dim: rgba(122,106,176,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-005</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-art">
+                        <img src="images/tailor.png" alt="Tailoring">
+                        <div class="card-art-glow"></div>
+                    </div>
                     <div class="card-name-bar"><span class="card-name">Tailoring</span><span class="card-cost">★4</span></div>
                     <div class="card-type-line">Crafting <span class="type-separator">—</span> Textile</div>
                     <div class="card-body">
@@ -678,7 +686,10 @@
 
             <a href="agriculture.html" class="skill-card" data-entries="24" style="--accent: #5ab05a; --accent-glow: rgba(90,176,90,0.3); --accent-dim: rgba(90,176,90,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-006</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-art">
+                        <img src="images/agriculture.png" alt="Agriculture">
+                        <div class="card-art-glow"></div>
+                    </div>
                     <div class="card-name-bar"><span class="card-name">Agriculture</span><span class="card-cost">★5</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Farming</div>
                     <div class="card-body">
@@ -692,21 +703,27 @@
 
             <a href="animal-care.html" class="skill-card" data-entries="16" style="--accent: #8b3a3a; --accent-glow: rgba(139,58,58,0.3); --accent-dim: rgba(139,58,58,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-007</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-art">
+                        <img src="images/animal.png" alt="Animal Care">
+                        <div class="card-art-glow"></div>
+                    </div>
                     <div class="card-name-bar"><span class="card-name">Animal Care</span><span class="card-cost">★4</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Livestock</div>
                     <div class="card-body">
                         <p class="card-desc">Livestock management, breeding, and meat processing. Living resources that need tending.</p>
                         <div class="card-entries"><span class="entries-label">Entries:</span><span class="entries-count">16</span></div>
                     </div>
-                    <div class="card-footer"><span class="card-category">Resources</span><span class="card-tag">→</span></div>
+                    <div class="card-footer"><span class="card-category">Resources</span><span class="card-arrow">→</span></div>
                     <div class="card-glare"></div>
                 </div>
             </a>
 
             <a href="tracking.html" class="skill-card" data-entries="9" style="--accent: #6b7a3a; --accent-glow: rgba(107,122,58,0.3); --accent-dim: rgba(107,122,58,0.12);" tabindex="0">
                 <div class="card-inner">
-                    <div class="card-art"><div class="art-placeholder"><span class="art-id">SKL-008</span><span class="art-status">Awaiting Asset</span></div><div class="card-art-glow"></div></div>
+                    <div class="card-art">
+                        <img src="images/tracking.png" alt="Tracking">
+                        <div class="card-art-glow"></div>
+                    </div>
                     <div class="card-name-bar"><span class="card-name">Tracking</span><span class="card-cost">★3</span></div>
                     <div class="card-type-line">Survival <span class="type-separator">—</span> Hunting</div>
                     <div class="card-body">
@@ -743,9 +760,6 @@
         const docHeight = document.body.scrollHeight;
         const viewH = window.innerHeight;
 
-        /* ==============================================
-           BOOT SEQUENCE
-           ============================================== */
         setTimeout(() => document.querySelector('.status-bar').classList.add('visible'), 200);
         setTimeout(() => document.querySelector('.hub-header').classList.add('visible'), 500);
         setTimeout(() => document.getElementById('data-strip').classList.add('visible'), 800);
@@ -789,9 +803,6 @@
         setTimeout(() => setInterval(() => triggerGlitch(false), 5000), 5500);
 
 
-        /* ==============================================
-           SCAN LINE
-           ============================================== */
         const scanEl = document.getElementById('scan-line');
         const SWEEP_DURATION = 3500;
         const COOLDOWN_DURATION = 15000;
@@ -838,9 +849,6 @@
         setTimeout(() => requestAnimationFrame(tickScan), 600);
 
 
-        /* ==============================================
-           PARTICLES
-           ============================================== */
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -985,9 +993,6 @@
         drawParticles();
 
 
-        /* ==============================================
-           CARD ENTRANCE
-           ============================================== */
         const cards = document.querySelectorAll('.skill-card');
         const cardKeyframes = [
             { opacity: 0, filter: 'blur(8px)', transform: 'translateY(150px) scale(0.4) rotateX(45deg)' },
@@ -1012,9 +1017,6 @@
         });
 
 
-        /* ==============================================
-           3D TILT
-           ============================================== */
         const MAX_TILT = (isMobile || isTouchDevice) ? 0 : 14;
 
         if (MAX_TILT > 0) {
@@ -1038,9 +1040,6 @@
         }
 
 
-        /* ==============================================
-           FOCUS DIM
-           ============================================== */
         const grid = document.getElementById('card-grid');
         let overCard = false;
 
@@ -1056,9 +1055,6 @@
         });
 
 
-        /* ==============================================
-           CHANGELOG SCROLL REVEAL
-           ============================================== */
         const changelogObsItems = document.querySelectorAll('.changelog-list li');
         const revealObs = new IntersectionObserver((entries) => {
             entries.forEach(entry => {

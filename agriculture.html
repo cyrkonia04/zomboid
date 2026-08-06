@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.95">
+    <title>Agriculture // Project Zomboid Database</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep: #070b0f;
+            --bg-panel: #0c1218;
+            --bg-card: #101820;
+            --bg-card-alt: #0d151c;
+            --bg-inset: #080d12;
+            --text-primary: #c8d8e8;
+            --text-muted: #4a5e72;
+            --text-dim: #2e3e50;
+            --border-dim: #162030;
+            --border-subtle: #1e3040;
+            --accent: #3a9a42;
+            --accent-bright: #50d45a;
+            --accent-glow: rgba(58, 154, 66, 0.4);
+            --accent-dim: rgba(58, 154, 66, 0.1);
+            --accent-faint: rgba(58, 154, 66, 0.04);
+            --cal-sow: rgba(60, 120, 200, 0.6);
+            --cal-best: rgba(58, 154, 66, 0.75);
+            --cal-risk-a: rgba(200, 160, 40, 0.55);
+            --cal-risk-b: rgba(200, 160, 40, 0.15);
+            --cal-off: rgba(255, 255, 255, 0.04);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg-inset); }
+        ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+        ::-webkit-scrollbar-corner { background: var(--bg-inset); }
+        * { scrollbar-width: thin; scrollbar-color: var(--border-subtle) var(--bg-inset); }
+        ::selection { background: rgba(58, 154, 66, 0.4); color: #fff; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+            background-size: 48px 48px;
+            z-index: 0; pointer-events: none;
+        }
+        body::after {
+            content: "";
+            position: fixed; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+            z-index: 0; pointer-events: none;
+        }
+
+        .matrix-texture {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.035;
+            background-image:
+                linear-gradient(rgba(58,154,66,1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(58,154,66,1) 1px, transparent 1px),
+                linear-gradient(2.5deg, rgba(58,154,66,0.5) 1px, transparent 1px),
+                linear-gradient(92.5deg, rgba(58,154,66,0.5) 1px, transparent 1px),
+                radial-gradient(circle 1.2px at 11px 11px, rgba(58,154,66,1) 0%, transparent 100%),
+                radial-gradient(circle 1.2px at 39px 39px, rgba(58,154,66,1) 0%, transparent 100%),
+                radial-gradient(circle 0.8px at 67px 67px, rgba(58,154,66,0.6) 0%, transparent 100%),
+                radial-gradient(circle 1px at 95px 95px, rgba(58,154,66,0.8) 0%, transparent 100%),
+                radial-gradient(circle 1.5px at 23px 50px, rgba(80,212,90,1) 0%, transparent 100%),
+                radial-gradient(circle 1.2px at 72px 28px, rgba(80,212,90,0.7) 0%, transparent 100%),
+                radial-gradient(circle 1px at 50px 85px, rgba(80,212,90,0.5) 0%, transparent 100%);
+            background-size:
+                26px 26px, 26px 26px, 37px 37px, 37px 37px,
+                26px 26px, 26px 26px, 26px 26px, 26px 26px,
+                37px 37px, 37px 37px, 37px 37px;
+            background-position: 0 0, 0 0, 7px 4px, 4px 7px, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+        }
+
+        .grain {
+            position: fixed; inset: 0; z-index: 9998; pointer-events: none; opacity: 0.02;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-repeat: repeat; background-size: 200px 200px;
+        }
+        .vignette {
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(0,0,0,0.6) 100%);
+            z-index: 0; pointer-events: none;
+        }
+
+        #particle-canvas { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
+
+        a { color: var(--accent-bright); text-decoration: none; transition: color 0.2s; }
+        a:hover { color: #80f088; }
+
+        .page-wrap {
+            position: relative; z-index: 2;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem 4rem;
+        }
+
+        .bracket-box { position: relative; padding: 1px; }
+        .bracket-box::before, .bracket-box::after {
+            content: ''; position: absolute; width: 8px; height: 8px;
+            border-color: var(--accent); border-style: solid;
+            opacity: 0.3; pointer-events: none; z-index: 10;
+        }
+        .bracket-box::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+        .bracket-box::after { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 0.3rem;
+            font-size: 0.72rem; font-weight: 500;
+            color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em;
+            padding: 0.8rem 0; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+        .back-link::before { content: '> '; color: var(--accent); opacity: 0.5; }
+
+        .page-header {
+            margin-bottom: 1.2rem; padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-dim); position: relative;
+        }
+        .page-header::after {
+            content: ''; position: absolute; bottom: -1px; left: 0;
+            width: 120px; height: 1px;
+            background: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
+        }
+        .page-title {
+            font-family: 'Rajdhani', sans-serif; font-size: 2rem; font-weight: 700;
+            color: var(--text-primary); letter-spacing: 0.04em; line-height: 1.1;
+        }
+        .page-title span { color: var(--accent-bright); text-shadow: 0 0 12px var(--accent-glow); }
+        .page-desc {
+            font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;
+            line-height: 1.5; max-width: 550px;
+        }
+        .page-desc::before { content: '> '; color: var(--accent); opacity: 0.4; }
+
+        /* --- FOCUS MONTH --- */
+        .focus-bar { position: relative; margin-bottom: 0; padding: 0.6rem 0; }
+        .focus-btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 500;
+            color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 0.4rem 0.8rem; background: var(--bg-card);
+            border: 1px dashed var(--border-subtle); cursor: pointer; transition: all 0.2s;
+        }
+        .focus-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+        .focus-btn.has-month { border-color: var(--accent); color: var(--accent-bright); border-style: solid; }
+        .focus-btn .focus-arrow { font-size: 0.5rem; transition: transform 0.2s; opacity: 0.5; }
+        .focus-btn.open .focus-arrow { transform: rotate(180deg); }
+        .focus-btn::before { content: '> '; color: var(--accent); opacity: 0.6; }
+
+        .focus-popup {
+            display: none; position: absolute; top: calc(100% + 8px); left: 0;
+            width: 580px; max-width: calc(100vw - 4rem);
+            background: var(--bg-card); border: 1px solid var(--border-subtle);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 1px var(--accent-dim);
+            z-index: 1000; overflow: hidden;
+        }
+        .focus-popup.visible { display: block; animation: popIn 0.15s ease-out; }
+        @keyframes popIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+        .focus-popup::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, var(--accent), transparent 60%); opacity: 0.4;
+        }
+
+        .month-row {
+            display: flex; gap: 3px; flex-wrap: wrap;
+            padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--border-dim);
+            background: var(--bg-inset);
+        }
+        .month-pick {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 500;
+            color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 0.25rem 0.5rem; background: transparent;
+            border: 1px dashed var(--border-dim); cursor: pointer; transition: all 0.15s;
+        }
+        .month-pick:hover { border-color: var(--border-subtle); color: var(--text-muted); }
+        .month-pick.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent-bright); border-style: solid; }
+
+        .focus-cats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+        .focus-cat-box { padding: 0.6rem 0.8rem; border-right: 1px solid var(--border-dim); min-height: 55px; }
+        .focus-cat-box:last-child { border-right: none; }
+        .focus-cat-label {
+            font-family: 'Rajdhani', sans-serif; font-size: 0.6rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.4rem;
+            padding-bottom: 0.3rem; border-bottom: 1px dashed var(--border-dim);
+        }
+        .focus-cat-label.cat-best { color: var(--accent-bright); }
+        .focus-cat-label.cat-sow { color: #5a9ae0; }
+        .focus-cat-label.cat-risk { color: #c8a028; }
+        .focus-cat-list { display: flex; flex-direction: column; gap: 1px; }
+        .focus-cat-item { font-size: 0.68rem; color: var(--text-muted); padding: 1px 0; }
+        .focus-cat-item::before { content: '· '; color: var(--text-dim); }
+        .focus-empty { font-size: 0.68rem; color: var(--text-dim); font-style: italic; }
+
+        /* --- TABS --- */
+        .db-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border-dim); position: relative; }
+        .db-tabs::after {
+            content: ''; position: absolute; bottom: -1px; left: 0;
+            width: 60px; height: 1px;
+            background: var(--accent); box-shadow: 0 0 6px var(--accent-glow);
+            transition: left 0.3s ease;
+        }
+        .db-tab {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 500;
+            color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 0.6rem 1rem; background: none;
+            border: none; border-bottom: 1px solid transparent;
+            cursor: pointer; transition: all 0.2s; position: relative;
+        }
+        .db-tab:hover { color: var(--text-muted); }
+        .db-tab.active { color: var(--accent-bright); border-bottom-color: var(--accent); text-shadow: 0 0 8px var(--accent-glow); }
+
+        .tab-panel { display: none; padding: 1.5rem 0 0; }
+        .tab-panel.active { display: block; animation: panelIn 0.2s ease-out; }
+        @keyframes panelIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ===========================
+           CALENDAR
+           =========================== */
+        .calendar-breakout {
+            margin-left: calc(-50vw + 50%);
+            margin-right: calc(-50vw + 50%);
+            padding: 0 calc(50vw - 50%);
+            overflow-x: auto;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 130px repeat(12, minmax(38px, 1fr));
+            gap: 0; min-width: 750px;
+        }
+        .cal-head {
+            font-family: 'Rajdhani', sans-serif; font-size: 0.62rem; font-weight: 700;
+            color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em;
+            padding: 0.45rem 0; text-align: center;
+            background: var(--bg-card-alt);
+            border-bottom: 1px solid var(--border-dim);
+            border-right: 1px solid var(--border-dim);
+        }
+        .cal-head:last-child { border-right: none; }
+        .cal-head.corner {
+            background: var(--bg-card); text-align: left; padding-left: 0.5rem;
+            color: var(--text-dim); border-bottom: 1px solid var(--border-subtle);
+        }
+        .cal-head.focus-col { color: var(--accent-bright); background: var(--accent-faint); }
+
+        .cal-label {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 500;
+            color: var(--text-muted); padding: 0.4rem 0.5rem;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-dim);
+            border-right: 1px solid var(--border-dim);
+            white-space: nowrap;
+        }
+
+        .cal-cell {
+            display: flex; align-items: center; justify-content: center;
+            border-bottom: 1px solid rgba(22,32,48,0.5);
+            border-right: 1px solid rgba(22,32,48,0.3);
+            padding: 0.35rem 0; height: 28px; cursor: default; transition: background 0.15s;
+        }
+        .cal-cell:last-child { border-right: none; }
+        .cal-cell:hover { background: rgba(255,255,255,0.02); }
+
+        .cal-check { width: 12px; height: 12px; border-radius: 1px; transition: all 0.15s; }
+        .cal-check.off { background: var(--cal-off); border: 1px dashed var(--border-dim); }
+        .cal-check.sow { background: var(--cal-sow); box-shadow: 0 0 4px rgba(60,120,200,0.2); }
+        .cal-check.best { background: var(--cal-best); box-shadow: 0 0 6px rgba(58,154,66,0.3); }
+        .cal-check.risk {
+            background: repeating-linear-gradient(45deg, var(--cal-risk-a), var(--cal-risk-a) 2px, var(--cal-risk-b) 2px, var(--cal-risk-b) 4px);
+            box-shadow: 0 0 4px rgba(200,160,40,0.15);
+        }
+        .cal-cell.focus-col { background: var(--accent-faint); }
+
+        .cal-legend-wrap {
+            margin-left: calc(-50vw + 50%);
+            margin-right: calc(-50vw + 50%);
+            padding: 0 calc(50vw - 50%);
+        }
+        .cal-legend {
+            display: flex; gap: 1.5rem; flex-wrap: wrap;
+            margin-top: 0.8rem; padding: 0.5rem 0;
+            border-top: 1px dashed var(--border-dim);
+        }
+        .cal-legend-item {
+            display: flex; align-items: center; gap: 0.4rem;
+            font-size: 0.65rem; font-weight: 500;
+            color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .cal-legend-item::before { content: '· '; color: var(--text-dim); }
+        .cal-legend-swatch { width: 12px; height: 12px; border-radius: 1px; flex-shrink: 0; }
+        .sw-off { background: var(--cal-off); border: 1px dashed var(--border-dim); }
+        .sw-sow { background: var(--cal-sow); }
+        .sw-best { background: var(--cal-best); }
+        .sw-risk { background: repeating-linear-gradient(45deg, var(--cal-risk-a), var(--cal-risk-a) 2px, var(--cal-risk-b) 2px, var(--cal-risk-b) 4px); }
+
+        /* ===========================
+           CROP DETAILS
+           =========================== */
+        .details-layout {
+            display: flex; gap: 0; height: calc(100vh - 260px);
+            min-height: 500px; border: 1px solid var(--border-dim); overflow: hidden;
+        }
+        .crop-sidebar {
+            width: 200px; min-width: 200px;
+            background: var(--bg-card-alt); border-right: 1px solid var(--border-dim);
+            overflow-y: auto; flex-shrink: 0;
+        }
+        .crop-list-item {
+            display: flex; align-items: center; gap: 0;
+            padding: 0.45rem 0.6rem; cursor: pointer;
+            border-bottom: 1px solid rgba(22,32,48,0.5); transition: background 0.1s;
+        }
+        .crop-list-item:hover { background: rgba(255,255,255,0.015); }
+        .crop-list-item.active {
+            background: var(--accent-faint); border-left: 2px solid var(--accent);
+            padding-left: calc(0.6rem - 2px);
+        }
+        .crop-list-name {
+            font-size: 0.72rem; font-weight: 500; color: var(--text-muted);
+            flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .crop-list-item.active .crop-list-name { color: var(--text-primary); }
+        .crop-list-tag {
+            font-family: 'Rajdhani', sans-serif; font-size: 0.5rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 1px 4px; border-radius: 1px;
+            margin-left: auto; flex-shrink: 0; white-space: nowrap;
+        }
+        .t-best { background: rgba(58,154,66,0.15); color: var(--accent-bright); }
+        .t-sow { background: rgba(60,120,200,0.12); color: #5a9ae0; }
+        .t-risk { background: rgba(200,160,40,0.12); color: #c8a028; }
+        .t-off { background: rgba(255,255,255,0.03); color: var(--text-dim); }
+
+        .crop-info-panel { flex: 1; overflow-y: auto; background: var(--bg-panel); }
+        .crop-empty {
+            display: flex; align-items: center; justify-content: center;
+            height: 100%; color: var(--text-dim); font-size: 0.8rem;
+        }
+        .crop-empty::before { content: '> '; color: var(--accent); opacity: 0.3; }
+
+        .crop-detail-header {
+            display: flex; align-items: center; gap: 0.8rem;
+            padding: 0.8rem 1rem; background: var(--bg-card);
+            border-bottom: 1px solid var(--border-dim);
+            position: sticky; top: 0; z-index: 5; flex-shrink: 0;
+        }
+        .crop-detail-header::after {
+            content: ''; position: absolute; bottom: -1px; left: 0;
+            width: 80px; height: 1px;
+            background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); opacity: 0.5;
+        }
+        .crop-detail-img {
+            width: 36px; height: 36px; border-radius: 1px; object-fit: cover;
+            background: var(--bg-inset); border: 1px solid var(--border-subtle); flex-shrink: 0;
+        }
+        .crop-detail-name {
+            font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: 700;
+            color: var(--text-primary); line-height: 1.2;
+        }
+        .crop-detail-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.2rem; }
+
+        .tag {
+            font-family: 'Rajdhani', sans-serif; font-size: 0.55rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 1px 5px; border-radius: 1px; white-space: nowrap;
+        }
+        .tag-name { background: var(--accent-dim); color: var(--accent-bright); border: 1px solid rgba(58,154,66,0.2); }
+        .tag-veg { background: rgba(180,140,90,0.08); color: #b0884a; border: 1px solid rgba(180,140,90,0.15); }
+        .tag-herb { background: rgba(110,90,160,0.08); color: #8a78b4; border: 1px solid rgba(110,90,160,0.15); }
+        .tag-regrow { background: rgba(58,154,66,0.08); color: #4a9a52; border: 1px solid rgba(58,154,66,0.15); }
+        .tag-hardy { background: rgba(60,120,200,0.08); color: #5a9ae0; border: 1px solid rgba(60,120,200,0.15); }
+
+        /* INFO — TWO COLUMN SPLIT */
+        .info-section { padding: 1rem 1.2rem; }
+
+        .info-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 2rem;
+        }
+
+        .info-grid {
+            display: grid; grid-template-columns: 140px 1fr; gap: 0 0.8rem;
+        }
+        .info-label {
+            font-size: 0.65rem; font-weight: 500; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 0.3rem 0; border-bottom: 1px solid rgba(22,32,48,0.4);
+        }
+        .info-label::before { content: '> '; color: var(--accent); opacity: 0.3; }
+        .info-value {
+            font-size: 0.78rem; color: var(--text-primary);
+            padding: 0.3rem 0; border-bottom: 1px solid rgba(22,32,48,0.4);
+        }
+
+        .info-months-bar {
+            grid-column: 1 / -1;
+            margin-top: 0.8rem;
+            padding-top: 0.6rem;
+            border-top: 1px dashed var(--accent-dim);
+        }
+        .info-months-bar .info-subsection { padding: 0 0 0.5rem; }
+        .info-months-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+        .month-col {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .month-col .info-label {
+            border-bottom: none;
+            padding-bottom: 0.2rem;
+            margin-bottom: 0.2rem;
+        }
+        .month-col .info-value {
+            padding-top: 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(22,32,48,0.25);
+        }
+
+        .info-subsection {
+            font-family: 'Rajdhani', sans-serif; font-size: 0.65rem; font-weight: 700;
+            color: var(--accent-bright); text-transform: uppercase; letter-spacing: 0.1em;
+            padding: 0.5rem 0 0.15rem; border-bottom: none !important;
+            grid-column: 1 / -1; text-shadow: 0 0 6px var(--accent-glow);
+        }
+        .info-subsection::before { content: '> '; }
+
+        .month-pill {
+            display: inline-block; font-family: 'Rajdhani', sans-serif;
+            font-size: 0.65rem; font-weight: 600; padding: 1px 5px;
+            border-radius: 1px; margin: 1px 1px 0 0;
+        }
+        .mp-best { background: rgba(58,154,66,0.12); color: var(--accent-bright); }
+        .mp-sow { background: rgba(60,120,200,0.1); color: #5a9ae0; }
+        .mp-risk { background: rgba(200,160,40,0.1); color: #c8a028; }
+
+        /* STAGES — BOTTOM, FULL WIDTH */
+        .stages-box {
+            margin: 0; background: var(--bg-card);
+            border-top: 1px solid var(--border-dim);
+            position: relative;
+        }
+        .stages-box::before, .stages-box::after {
+            content: ''; position: absolute; width: 6px; height: 6px;
+            border-color: var(--accent); border-style: solid;
+            opacity: 0.3; pointer-events: none; z-index: 10;
+        }
+        .stages-box::before { bottom: 0; left: 0; border-width: 0 0 1px 1px; }
+        .stages-box::after { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+
+        .stages-box-header {
+            font-family: 'Rajdhani', sans-serif; font-size: 0.65rem; font-weight: 700;
+            color: var(--accent-bright); text-transform: uppercase; letter-spacing: 0.1em;
+            padding: 0.45rem 0.8rem; background: var(--accent-faint);
+            border-bottom: 1px dashed var(--accent-dim);
+        }
+        .stages-box-header::before { content: '> '; opacity: 0.5; }
+        .stages-note {
+            font-size: 0.65rem; color: var(--text-dim); font-style: italic;
+            padding: 0.3rem 0.8rem; border-bottom: 1px solid var(--border-dim);
+        }
+        .stages-note::before { content: '// '; color: var(--accent); opacity: 0.3; font-style: normal; }
+
+        .stages-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+        .stages-table th {
+            font-family: 'Rajdhani', sans-serif; font-size: 0.58rem; font-weight: 700;
+            color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 0.4rem 0.6rem; text-align: left;
+            background: var(--bg-card-alt); border-bottom: 1px solid var(--border-dim);
+        }
+        .stages-table td {
+            padding: 0.35rem 0.6rem; border-bottom: 1px solid rgba(22,32,48,0.35);
+            color: var(--text-muted);
+        }
+        .stages-table tr:last-child td { border-bottom: none; }
+        .stage-check { text-align: center; width: 36px; color: var(--text-dim); }
+        .stage-dur { color: var(--text-dim); }
+        .stage-window { color: var(--text-muted); }
+        .stage-mile {
+            font-family: 'Rajdhani', sans-serif; font-size: 0.68rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .mile-growth { color: var(--text-dim); }
+        .mile-mature { color: var(--accent); }
+        .mile-harvest { color: var(--accent-bright); text-shadow: 0 0 6px var(--accent-glow); }
+
+        /* ===========================
+           UPKEEP RULES — 2x2
+           =========================== */
+        .rules-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+        }
+        .rule-section { margin-bottom: 0; }
+        .rule-section-title {
+            font-family: 'Rajdhani', sans-serif; font-size: 0.75rem; font-weight: 700;
+            color: var(--accent-bright); text-transform: uppercase; letter-spacing: 0.12em;
+            padding-bottom: 0.4rem; margin-bottom: 0.6rem;
+            border-bottom: 1px dashed var(--accent-dim);
+            text-shadow: 0 0 6px var(--accent-glow);
+        }
+        .rule-section-title::before { content: '> '; opacity: 0.6; }
+        .rule-row {
+            display: grid; grid-template-columns: 120px 1fr; gap: 0 0.8rem;
+            padding: 0.4rem 0; border-bottom: 1px solid rgba(22,32,48,0.35);
+            align-items: baseline;
+        }
+        .rule-row:last-child { border-bottom: none; }
+        .rule-cond { font-size: 0.72rem; font-weight: 500; color: var(--accent-bright); padding: 0.15rem 0; }
+        .rule-desc { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; }
+        .rule-desc strong { color: var(--text-primary); font-weight: 500; }
+        .rule-note {
+            grid-column: 1 / -1; font-size: 0.68rem; color: var(--text-dim);
+            font-style: italic; padding: 0.25rem 0 0; margin-top: -0.2rem;
+        }
+        .rule-note::before { content: '// '; color: var(--accent); opacity: 0.3; font-style: normal; }
+
+        .db-footer {
+            text-align: center; margin-top: 3rem; padding-top: 1.2rem;
+            border-top: 1px dashed var(--border-dim);
+            font-size: 0.62rem; font-weight: 500;
+            color: var(--text-dim); letter-spacing: 0.08em;
+        }
+        .db-footer a { color: var(--text-dim); }
+        .db-footer a:hover { color: var(--accent); }
+
+        .db-tab:focus-visible, .focus-btn:focus-visible, .month-pick:focus-visible, .crop-list-item:focus-visible {
+            outline: none; box-shadow: 0 0 0 1px var(--bg-deep), 0 0 0 2px var(--accent);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .tab-panel.active, .focus-popup.visible { animation: none !important; }
+        }
+
+        @media (max-width: 1100px) {
+            .rules-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+        }
+
+        @media (max-width: 900px) {
+            .page-wrap { padding: 0 1rem 3rem; }
+            .page-title { font-size: 1.6rem; }
+            .focus-popup { width: calc(100vw - 2rem); }
+            .focus-cats { grid-template-columns: 1fr; }
+            .focus-cat-box { border-right: none; border-bottom: 1px solid var(--border-dim); }
+            .focus-cat-box:last-child { border-bottom: none; }
+            .details-layout { flex-direction: column; height: auto; min-height: 0; }
+            .crop-sidebar {
+                width: 100%; min-width: 100%; max-height: 180px;
+                border-right: none; border-bottom: 1px solid var(--border-dim);
+            }
+            .crop-sidebar::-webkit-scrollbar { height: 4px; }
+            .crop-info-panel { min-height: 400px; }
+            .info-two-col { grid-template-columns: 1fr; gap: 0; }
+            .info-months-row { grid-template-columns: 1fr; gap: 1rem; }
+            .calendar-breakout { margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; }
+            .cal-legend-wrap { margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; }
+        }
+
+        @media (max-width: 600px) {
+            .page-title { font-size: 1.3rem; }
+            .db-tab { font-size: 0.6rem; padding: 0.45rem 0.6rem; letter-spacing: 0.05em; }
+            .cal-label { font-size: 0.6rem; padding: 0.3rem 0.3rem; }
+            .cal-head { font-size: 0.55rem; }
+            .calendar-grid { grid-template-columns: 90px repeat(12, minmax(28px, 1fr)); }
+            .cal-check { width: 10px; height: 10px; }
+            .crop-detail-header { padding: 0.6rem 0.8rem; }
+            .crop-detail-name { font-size: 1rem; }
+            .info-grid { grid-template-columns: 1fr; gap: 0; }
+            .info-label { border-bottom: none; padding-bottom: 0; }
+            .info-value { padding-left: 0.4rem; }
+            .rule-row { grid-template-columns: 1fr; gap: 0; }
+            .rule-cond { padding-bottom: 0; }
+            .stages-table { font-size: 0.62rem; }
+            .stages-table th, .stages-table td { padding: 0.25rem 0.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="matrix-texture"></div>
+    <canvas id="particle-canvas"></canvas>
+    <div class="vignette"></div>
+    <div class="grain"></div>
+
+    <div class="page-wrap">
+
+        <a href="index.html" class="back-link">Database Hub</a>
+
+        <header class="page-header">
+            <h1 class="page-title"><span>Agriculture</span> Guide</h1>
+            <p class="page-desc">Crop cycles, seasonal planting charts, growth mechanics, and farming infrastructure. Build 42.20</p>
+        </header>
+
+        <div class="focus-bar" id="focus-bar">
+            <button class="focus-btn" id="focus-btn" aria-expanded="false" aria-haspopup="true">
+                <span id="focus-label">Focus Month: None</span>
+                <span class="focus-arrow">▼</span>
+            </button>
+            <div class="focus-popup" id="focus-popup" role="listbox">
+                <div class="month-row" id="month-row"></div>
+                <div class="focus-cats" id="focus-cats">
+                    <div class="focus-cat-box"><div class="focus-cat-label cat-best">Best</div><div class="focus-cat-list" id="cat-best"><span class="focus-empty">Select a month</span></div></div>
+                    <div class="focus-cat-box"><div class="focus-cat-label cat-sow">Sow / Normal</div><div class="focus-cat-list" id="cat-sow"><span class="focus-empty">Select a month</span></div></div>
+                    <div class="focus-cat-box"><div class="focus-cat-label cat-risk">Risk</div><div class="focus-cat-list" id="cat-risk"><span class="focus-empty">Select a month</span></div></div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="db-tabs" role="tablist">
+            <button class="db-tab active" role="tab" data-tab="calendar" aria-selected="true" aria-controls="panel-calendar">Crop Calendar</button>
+            <button class="db-tab" role="tab" data-tab="details" aria-selected="false" aria-controls="panel-details">Crop Details</button>
+            <button class="db-tab" role="tab" data-tab="upkeep" aria-selected="false" aria-controls="panel-upkeep">Upkeep Rules</button>
+        </nav>
+
+        <div class="tab-panel active" id="panel-calendar" role="tabpanel">
+            <div class="calendar-breakout">
+                <div class="calendar-grid" id="calendar-grid"></div>
+            </div>
+            <div class="cal-legend-wrap">
+                <div class="cal-legend">
+                    <div class="cal-legend-item"><span class="cal-legend-swatch sw-off"></span> Off-season</div>
+                    <div class="cal-legend-item"><span class="cal-legend-swatch sw-sow"></span> Sow</div>
+                    <div class="cal-legend-item"><span class="cal-legend-swatch sw-best"></span> Best</div>
+                    <div class="cal-legend-item"><span class="cal-legend-swatch sw-risk"></span> Risk</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-details" role="tabpanel">
+            <div class="details-layout bracket-box">
+                <div class="crop-sidebar" id="crop-sidebar"></div>
+                <div class="crop-info-panel" id="crop-info-panel">
+                    <div class="crop-empty">Select a crop from the list</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-upkeep" role="tabpanel">
+            <div class="rules-grid">
+                <div class="rule-section">
+                    <h2 class="rule-section-title">Growth Timing</h2>
+                    <div class="rule-row"><span class="rule-cond">BASE</span><span class="rule-desc">Each crop uses its own <strong>timeToGrow</strong> as one stage duration.</span></div>
+                    <div class="rule-row"><span class="rule-cond">÷ SPEED</span><span class="rule-desc">Stage time is divided by <strong>FarmingSpeedNew</strong>.</span></div>
+                    <div class="rule-row"><span class="rule-cond">± 12h</span><span class="rule-desc">Every schedule independently rolls <strong>-12 through +12 hours</strong>, inclusive.</span></div>
+                    <div class="rule-row"><span class="rule-cond">MIN 1h</span><span class="rule-desc">A result at or below zero is <strong>clamped to 1 hour</strong>.</span></div>
+                </div>
+                <div class="rule-section">
+                    <h2 class="rule-section-title">Water Thresholds</h2>
+                    <div class="rule-row"><span class="rule-cond">≥ MIN</span><span class="rule-desc">Normal growth.</span></div>
+                    <div class="rule-row"><span class="rule-cond">≥ ⌊MIN/1.10⌋</span><span class="rule-desc">Still grows; each missing water point <strong>adds one hour</strong> to the stage.</span></div>
+                    <div class="rule-row"><span class="rule-cond">≥ ⌊MIN/1.30⌋</span><span class="rule-desc">Stage does <strong>not advance</strong>; retries after about <strong>30 hours</strong>.</span></div>
+                    <div class="rule-row"><span class="rule-cond">Below ⌊MIN/1.30⌋</span><span class="rule-desc">Stage does <strong>not advance</strong>; retries after about <strong>50 hours</strong>; loses <strong>4× adverse-multiplier</strong> health. <strong>Zero water after stage 1</strong> dries the plant out.</span></div>
+                </div>
+                <div class="rule-section">
+                    <h2 class="rule-section-title">Mildew and Pests</h2>
+                    <div class="rule-row"><span class="rule-cond">0–9</span><span class="rule-desc">Mildew does <strong>not delay</strong> growth.</span></div>
+                    <div class="rule-row"><span class="rule-cond">10–29</span><span class="rule-desc">Mildew level <strong>added directly</strong> to each stage in hours.</span></div>
+                    <div class="rule-row"><span class="rule-cond">30–59</span><span class="rule-desc">Growth <strong>stops</strong>; retries after <strong>30 hours</strong>.</span></div>
+                    <div class="rule-row"><span class="rule-cond">60+</span><span class="rule-desc">Plant <strong>dies</strong> at next growth check.</span></div>
+                    <p class="rule-note">Aphids/slugs: -1 yield per 10 levels. Flies: increased water loss.</p>
+                </div>
+                <div class="rule-section">
+                    <h2 class="rule-section-title">Harvest Probability</h2>
+                    <div class="rule-row"><span class="rule-cond">HEALTH</span><span class="rule-desc">Every <strong>10 HP</strong> away from 50 shifts both base roll bounds by 1.</span></div>
+                    <div class="rule-row"><span class="rule-cond">BONUS</span><span class="rule-desc">Rolls twice, takes higher; raises caps by <strong>1</strong>.</span></div>
+                    <div class="rule-row"><span class="rule-cond">SKILL</span><span class="rule-desc">With <strong>skill/10</strong> probability, skill level added to yield.</span></div>
+                    <div class="rule-row"><span class="rule-cond">MIN 1</span><span class="rule-desc">After pest penalties, final harvest returns <strong>at least 1</strong>.</span></div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="db-footer">
+            web woven by <a href="https://cyrkonia04.com" target="_blank" rel="noopener noreferrer">cyrko</a>
+        </footer>
+    </div>
+
+<script>
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function makeStages(c,d){const s=[];let cMin=0,cMax=0;for(let i=1;i<=c;i++){cMin+=d*24-12;cMax+=d*24+12;let m='growth';if(i===c-1)m='mature';else if(i===c)m='first harvest · seed-bearing';s.push({check:i,stage:d+' days ±12h',window:(cMin/24).toFixed(1)+' days — '+(cMax/24).toFixed(1)+' days',milestone:m});}return s;}
+
+const CROPS=[
+    {id:'strawberry',name:'Strawberry',tags:['Herb / flower','regrows to stage 2'],sowingItem:'Strawberry Seeds · 1',firstHarvest:'87 days–93 days',seedBearing:'87 days–93 days',growthStates:'7 · 1–7',minWater:'80 → 80',baseYield:'4–6',adjustedCap:'8–14',scytheCondition:'not safe to scythe',badMonthHardiness:'—',rotTimer:'7.5 days',bestMonths:['Mar'],sowMonths:['Feb','Mar','Apr'],riskMonths:['Apr'],stages:[{check:1,stage:'15 days ±12h',window:'14.5 days — 15.5 days',milestone:'growth'},{check:2,stage:'15 days ±12h',window:'29 days — 31 days',milestone:'growth'},{check:3,stage:'15 days ±12h',window:'43.5 days — 46.5 days',milestone:'growth'},{check:4,stage:'15 days ±12h',window:'58 days — 62 days',milestone:'growth'},{check:5,stage:'15 days ±12h',window:'72.5 days — 77.5 days',milestone:'mature'},{check:6,stage:'15 days ±12h',window:'87 days — 93 days',milestone:'first harvest · seed-bearing'}],cal:{Jan:'off',Feb:'sow',Mar:'best',Apr:'risk',May:'off',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
+    {id:'tomato',name:'Tomato',tags:['Vegetable / field crop'],sowingItem:'Tomato Seeds · 5',firstHarvest:'82 days–90 days',seedBearing:'82 days–90 days',growthStates:'6 · 1–6',minWater:'75 → 85',baseYield:'3–5',adjustedCap:'6–10',scytheCondition:'not safe to scythe',badMonthHardiness:'—',rotTimer:'5 days',bestMonths:['Jun','Jul'],sowMonths:['Apr','May','Jul'],riskMonths:['May','Aug'],stages:makeStages(6,14),cal:{Jan:'off',Feb:'off',Mar:'off',Apr:'sow',May:'risk',Jun:'best',Jul:'best',Aug:'risk',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
+    {id:'potato',name:'Potato',tags:['Vegetable / field crop'],sowingItem:'Potato Seeds · 5',firstHarvest:'78 days–84 days',seedBearing:'78 days–84 days',growthStates:'5 · 1–5',minWater:'70 → 75',baseYield:'4–8',adjustedCap:'8–16',scytheCondition:'safe to scythe',badMonthHardiness:'—',rotTimer:'10 days',bestMonths:['Apr','May'],sowMonths:['Mar','Apr'],riskMonths:['Mar'],stages:makeStages(5,16),cal:{Jan:'off',Feb:'off',Mar:'risk',Apr:'best',May:'best',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
+    {id:'cabbage',name:'Cabbage',tags:['Vegetable / field crop','cold hardy'],sowingItem:'Cabbage Seeds · 5',firstHarvest:'58 days–64 days',seedBearing:'58 days–64 days',growthStates:'5 · 1–5',minWater:'65 → 70',baseYield:'2–4',adjustedCap:'4–8',scytheCondition:'safe to scythe',badMonthHardiness:'moderate',rotTimer:'8 days',bestMonths:['Mar','Apr'],sowMonths:['Feb','Mar','Apr'],riskMonths:['Apr'],stages:makeStages(5,12),cal:{Jan:'off',Feb:'sow',Mar:'best',Apr:'best',May:'risk',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
+    {id:'carrot',name:'Carrot',tags:['Vegetable / field crop'],sowingItem:'Carrot Seeds · 5',firstHarvest:'48 days–54 days',seedBearing:'48 days–54 days',growthStates:'5 · 1–5',minWater:'60 → 65',baseYield:'3–5',adjustedCap:'6–10',scytheCondition:'safe to scythe',badMonthHardiness:'—',rotTimer:'12 days',bestMonths:['Apr','May'],sowMonths:['Mar','Apr','May'],riskMonths:['May'],stages:makeStages(5,10),cal:{Jan:'off',Feb:'off',Mar:'sow',Apr:'best',May:'best',Jun:'risk',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
+    {id:'corn',name:'Corn',tags:['Vegetable / field crop'],sowingItem:'Corn Seeds · 5',firstHarvest:'89 days–99 days',seedBearing:'89 days–99 days',growthStates:'7 · 1–7',minWater:'85 → 90',baseYield:'2–4',adjustedCap:'4–8',scytheCondition:'not safe to scythe',badMonthHardiness:'—',rotTimer:'4 days',bestMonths:['Jun','Jul'],sowMonths:['Apr','May','Jun'],riskMonths:['May','Aug'],stages:makeStages(7,13),cal:{Jan:'off',Feb:'off',Mar:'off',Apr:'sow',May:'risk',Jun:'best',Jul:'best',Aug:'risk',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
+    {id:'beans',name:'Beans',tags:['Vegetable / field crop'],sowingItem:'Bean Seeds · 5',firstHarvest:'48 days–54 days',seedBearing:'48 days–54 days',growthStates:'5 · 1–5',minWater:'55 → 60',baseYield:'3–6',adjustedCap:'6–12',scytheCondition:'safe to scythe',badMonthHardiness:'—',rotTimer:'6 days',bestMonths:['May','Jun'],sowMonths:['Apr','May','Jun'],riskMonths:['Jun'],stages:makeStages(5,10),cal:{Jan:'off',Feb:'off',Mar:'off',Apr:'sow',May:'best',Jun:'best',Jul:'risk',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
+    {id:'lettuce',name:'Lettuce',tags:['Vegetable / field crop','cold hardy'],sowingItem:'Lettuce Seeds · 5',firstHarvest:'30 days–34 days',seedBearing:'30 days–34 days',growthStates:'4 · 1–4',minWater:'50 → 55',baseYield:'1–3',adjustedCap:'2–6',scytheCondition:'safe to scythe',badMonthHardiness:'high',rotTimer:'3 days',bestMonths:['Mar','Apr'],sowMonths:['Feb','Mar','Apr'],riskMonths:['Apr'],stages:makeStages(4,8),cal:{Jan:'off',Feb:'sow',Mar:'best',Apr:'best',May:'risk',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
+    {id:'broccoli',name:'Broccoli',tags:['Vegetable / field crop','cold hardy'],sowingItem:'Broccoli Seeds · 5',firstHarvest:'64 days–72 days',seedBearing:'64 days–72 days',growthStates:'6 · 1–6',minWater:'65 → 70',baseYield:'2–4',adjustedCap:'4–8',scytheCondition:'safe to scythe',badMonthHardiness:'moderate',rotTimer:'5 days',bestMonths:['Mar','Apr'],sowMonths:['Feb','Mar'],riskMonths:['Apr'],stages:makeStages(6,11),cal:{Jan:'off',Feb:'sow',Mar:'best',Apr:'best',May:'risk',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
+    {id:'watermelon',name:'Watermelon',tags:['Vegetable / field crop'],sowingItem:'Watermelon Seeds · 5',firstHarvest:'94 days–106 days',seedBearing:'94 days–106 days',growthStates:'8 · 1–8',minWater:'90 → 95',baseYield:'1–2',adjustedCap:'2–4',scytheCondition:'not safe to scythe',badMonthHardiness:'—',rotTimer:'8 days',bestMonths:['Jul','Aug'],sowMonths:['May','Jun','Jul'],riskMonths:['Jun','Aug'],stages:makeStages(8,12),cal:{Jan:'off',Feb:'off',Mar:'off',Apr:'off',May:'sow',Jun:'risk',Jul:'best',Aug:'best',Sep:'risk',Oct:'off',Nov:'off',Dec:'off'}},
+    {id:'squash',name:'Squash',tags:['Vegetable / field crop'],sowingItem:'Squash Seeds · 5',firstHarvest:'64 days–72 days',seedBearing:'64 days–72 days',growthStates:'6 · 1–6',minWater:'75 → 80',baseYield:'2–4',adjustedCap:'4–8',scytheCondition:'not safe to scythe',badMonthHardiness:'—',rotTimer:'10 days',bestMonths:['Jun','Jul'],sowMonths:['Apr','May','Jun'],riskMonths:['May'],stages:makeStages(6,11),cal:{Jan:'off',Feb:'off',Mar:'off',Apr:'sow',May:'risk',Jun:'best',Jul:'best',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
+    {id:'radish',name:'Radish',tags:['Vegetable / field crop'],sowingItem:'Radish Seeds · 5',firstHarvest:'16 days–20 days',seedBearing:'16 days–20 days',growthStates:'3 · 1–3',minWater:'40 → 45',baseYield:'2–4',adjustedCap:'4–8',scytheCondition:'safe to scythe',badMonthHardiness:'—',rotTimer:'5 days',bestMonths:['Apr'],sowMonths:['Mar','Apr','May'],riskMonths:['May'],stages:makeStages(3,6),cal:{Jan:'off',Feb:'off',Mar:'sow',Apr:'best',May:'risk',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}}
+];
+
+let focusMonth=null,selectedCropId=null,activeTab='calendar';
+
+document.querySelectorAll('.db-tab').forEach(b=>{
+    b.addEventListener('click',function(){const id=this.dataset.tab;if(id===activeTab)return;activeTab=id;document.querySelectorAll('.db-tab').forEach(t=>{t.classList.remove('active');t.setAttribute('aria-selected','false');});document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));this.classList.add('active');this.setAttribute('aria-selected','true');document.getElementById('panel-'+id).classList.add('active');});
+});
+
+const focusBtn=document.getElementById('focus-btn'),focusPopup=document.getElementById('focus-popup'),focusLabel=document.getElementById('focus-label'),monthRow=document.getElementById('month-row');
+MONTHS.forEach(m=>{const b=document.createElement('button');b.className='month-pick';b.textContent=m;b.setAttribute('role','option');b.addEventListener('click',()=>setFocusMonth(m));monthRow.appendChild(b);});
+focusBtn.addEventListener('click',e=>{e.stopPropagation();const o=focusPopup.classList.toggle('visible');focusBtn.classList.toggle('open',o);focusBtn.setAttribute('aria-expanded',o);});
+document.addEventListener('click',e=>{if(!document.getElementById('focus-bar').contains(e.target)){focusPopup.classList.remove('visible');focusBtn.classList.remove('open');focusBtn.setAttribute('aria-expanded','false');}});
+
+function getCropStatus(c,m){if(c.bestMonths.includes(m))return'best';if(c.riskMonths.includes(m))return'risk';if(c.sowMonths.includes(m))return'sow';return'off';}
+
+function setFocusMonth(m){
+    if(focusMonth===m){focusMonth=null;focusBtn.classList.remove('has-month');focusLabel.textContent='Focus Month: None';monthRow.querySelectorAll('.month-pick').forEach(b=>b.classList.remove('active'));}
+    else{focusMonth=m;focusBtn.classList.add('has-month');focusLabel.textContent='Focus Month: '+m;monthRow.querySelectorAll('.month-pick').forEach(b=>b.classList.toggle('active',b.textContent===m));}
+    updateFocusCats();renderCalendar();renderSidebar();if(selectedCropId)renderCropDetail(selectedCropId);
+}
+
+function updateFocusCats(){
+    const els={best:document.getElementById('cat-best'),sow:document.getElementById('cat-sow'),risk:document.getElementById('cat-risk')};
+    if(!focusMonth){Object.values(els).forEach(el=>el.innerHTML='<span class="focus-empty">Select a month</span>');return;}
+    const g={best:[],sow:[],risk:[]};
+    CROPS.forEach(c=>{const s=getCropStatus(c,focusMonth);if(s!=='off')g[s].push(c.name);});
+    Object.entries(g).forEach(([k,arr])=>{els[k].innerHTML=arr.length?arr.map(n=>'<span class="focus-cat-item">'+n+'</span>').join(''):'<span class="focus-empty">None</span>';});
+}
+
+function renderCalendar(){
+    const g=document.getElementById('calendar-grid');g.innerHTML='';
+    const c=document.createElement('div');c.className='cal-head corner';c.textContent='CROP';g.appendChild(c);
+    MONTHS.forEach(m=>{const h=document.createElement('div');h.className='cal-head'+(focusMonth===m?' focus-col':'');h.textContent=m;g.appendChild(h);});
+    CROPS.forEach(crop=>{
+        const l=document.createElement('div');l.className='cal-label';l.textContent=crop.name;g.appendChild(l);
+        MONTHS.forEach(m=>{const cell=document.createElement('div');const s=getCropStatus(crop,m);cell.className='cal-cell'+(focusMonth===m?' focus-col':'');cell.title=crop.name+' — '+m+': '+s;const chk=document.createElement('div');chk.className='cal-check '+s;cell.appendChild(chk);g.appendChild(cell);});
+    });
+}
+renderCalendar();
+
+function renderSidebar(){
+    const sb=document.getElementById('crop-sidebar');sb.innerHTML='';
+    CROPS.forEach(crop=>{
+        const item=document.createElement('div');item.className='crop-list-item'+(selectedCropId===crop.id?' active':'');item.setAttribute('tabindex','0');item.setAttribute('role','option');
+        let t='';if(focusMonth){const s=getCropStatus(crop,focusMonth);t='<span class="crop-list-tag t-'+s+'">'+s+'</span>';}
+        item.innerHTML='<span class="crop-list-name">'+crop.name+'</span>'+t;
+        item.addEventListener('click',()=>selectCrop(crop.id));
+        item.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectCrop(crop.id);}});
+        sb.appendChild(item);
+    });
+}
+function selectCrop(id){selectedCropId=id;renderSidebar();renderCropDetail(id);}
+renderSidebar();
+
+function renderCropDetail(id){
+    const panel=document.getElementById('crop-info-panel');const crop=CROPS.find(c=>c.id===id);
+    if(!crop){panel.innerHTML='<div class="crop-empty">Select a crop from the list</div>';return;}
+    let tagsH='<span class="tag tag-name">'+crop.name+'</span>';
+    crop.tags.forEach(t=>{let cls='tag-veg';if(t.includes('Herb'))cls='tag-herb';else if(t.includes('regrow'))cls='tag-regrow';else if(t.includes('hardy'))cls='tag-hardy';tagsH+='<span class="tag '+cls+'">'+t+'</span>';});
+    function mp(ms,cls){return ms.map(m=>'<span class="month-pill '+cls+'">'+m+'</span>').join(' ');}
+    function mc(m){if(m.includes('harvest'))return'mile-harvest';if(m.includes('mature'))return'mile-mature';return'mile-growth';}
+    let sR='';crop.stages.forEach(s=>{sR+='<tr><td class="stage-check">'+s.check+'</td><td class="stage-dur">'+s.stage+'</td><td class="stage-window">'+s.window+'</td><td class="stage-mile '+mc(s.milestone)+'">'+s.milestone+'</td></tr>';});
+
+    panel.innerHTML=
+        '<div class="crop-detail-header"><img class="crop-detail-img" src="images/'+crop.id+'.png" alt="'+crop.name+'" onerror="this.style.background=\'var(--bg-inset)\'"><div><div class="crop-detail-name">'+crop.name+'</div><div class="crop-detail-tags">'+tagsH+'</div></div></div>'+
+        '<div class="info-section"><div class="info-two-col">'+
+            '<div class="info-grid">'+
+                '<span class="info-label">Sowing item / tile</span><span class="info-value">'+crop.sowingItem+'</span>'+
+                '<span class="info-label">First harvest</span><span class="info-value">'+crop.firstHarvest+'</span>'+
+                '<span class="info-label">Seed-bearing</span><span class="info-value">'+crop.seedBearing+'</span>'+
+                '<span class="info-label">Growth states</span><span class="info-value">'+crop.growthStates+'</span>'+
+                '<span class="info-label">Minimum water</span><span class="info-value">'+crop.minWater+'</span>'+
+            '</div>'+
+            '<div class="info-grid">'+
+                '<span class="info-label">Base yield</span><span class="info-value">'+crop.baseYield+'</span>'+
+                '<span class="info-label">Adjusted cap</span><span class="info-value">'+crop.adjustedCap+'</span>'+
+                '<span class="info-label">Scythe condition</span><span class="info-value">'+crop.scytheCondition+'</span>'+
+                '<span class="info-label">Bad-month hardy.</span><span class="info-value">'+crop.badMonthHardiness+'</span>'+
+                '<span class="info-label">Rot timer</span><span class="info-value">'+crop.rotTimer+'</span>'+
+            '</div>'+
+            '<div class="info-months-bar">'+
+                '<div class="info-subsection">Month Definitions</div>'+
+                '<div class="info-months-row">'+
+                    '<div class="month-col"><span class="info-label">Best</span><span class="info-value">'+(crop.bestMonths.length?mp(crop.bestMonths,'mp-best'):'—')+'</span></div>'+
+                    '<div class="month-col"><span class="info-label">Sowing</span><span class="info-value">'+(crop.sowMonths.length?mp(crop.sowMonths,'mp-sow'):'—')+'</span></div>'+
+                    '<div class="month-col"><span class="info-label">Risk</span><span class="info-value">'+(crop.riskMonths.length?mp(crop.riskMonths,'mp-risk'):'—')+'</span></div>'+
+                '</div>'+
+            '</div>'+
+        '</div></div>'+
+        '<div class="stages-box">'+
+            '<div class="stages-box-header">Growth Stages</div>'+
+            '<div class="stages-note">Cumulative windows include every -12 to +12 hour random offset</div>'+
+            '<table class="stages-table"><thead><tr><th>Check</th><th>This stage</th><th>Cumulative window</th><th>Milestone</th></tr></thead><tbody>'+sR+'</tbody></table></table>'+
+        '</div>';
+}
+
+/* ============================================================
+   PARTICLES (no scan line)
+   ============================================================ */
+const isMobile=window.innerWidth<768;
+const canvas=document.getElementById('particle-canvas');
+const ctx=canvas.getContext('2d');
+let particles=[];
+const P_COUNT=isMobile?20:45;
+const CONNECT_DIST=isMobile?80:120;
+const docH=document.body.scrollHeight;
+
+function sizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+sizeCanvas();window.addEventListener('resize',sizeCanvas);
+
+function edgeX(){const w=canvas.width,r=Math.random();if(r<0.28)return Math.random()*w*0.12;if(r<0.56)return w*0.88+Math.random()*w*0.12;return Math.random()*w;}
+
+for(let i=0;i<P_COUNT;i++){
+    const type=Math.random()<0.25?0:Math.random()<0.4?1:Math.random()<0.75?2:3;
+    const isNode=type===3,isLine=type===2;
+    let vx,vy,size;
+    if(isNode){vx=0;vy=0;size=1.5;}
+    else if(isLine){const a=Math.random()*Math.PI*2,s=0.3+Math.random()*0.5;vx=Math.cos(a)*s;vy=Math.sin(a)*s;size=4+Math.random()*6;}
+    else{vx=(Math.random()-0.5)*0.35;vy=(Math.random()-0.5)*0.35;size=1+Math.random()*1.5;}
+    const cr=Math.random();
+    let rgb=cr<0.5?[58,154,66]:cr<0.8?[80,212,90]:[120,180,200];
+    particles.push({x:edgeX(),y:Math.random()*docH,vx,vy,size,type,rgb,baseAlpha:isNode?0.25:0.12+Math.random()*0.18,alpha:0,phase:Math.random()*Math.PI*2,ps:0.015+Math.random()*0.025,pt:150+Math.random()*400,pulsing:false,pl:0});
+}
+
+function drawParticles(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const sy=window.scrollY,vb=sy+canvas.height+20,vt=sy-20;
+    for(let i=0;i<particles.length;i++){
+        const pi=particles[i];if(pi.y<vt||pi.y>vb)continue;
+        for(let j=i+1;j<Math.min(i+8,particles.length);j++){
+            const pj=particles[j];if(pj.y<vt||pj.y>vb)continue;
+            const dx=pi.x-pj.x,dy=pi.y-pj.y,d=Math.sqrt(dx*dx+dy*dy);
+            if(d<CONNECT_DIST){ctx.strokeStyle='rgba(58,154,66,'+((1-d/CONNECT_DIST)*0.07)+')';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(pi.x,pi.y-sy);ctx.lineTo(pj.x,pj.y-sy);ctx.stroke();}
+        }
+    }
+    for(const p of particles){
+        p.x+=p.vx;p.y+=p.vy;p.phase+=p.ps;
+        if(p.x<-15)p.x=canvas.width+15;if(p.x>canvas.width+15)p.x=-15;
+        if(p.y<-15)p.y=docH+15;if(p.y>docH+15)p.y=-15;
+        p.alpha=p.baseAlpha+Math.sin(p.phase)*0.06;
+        if(p.pulsing){p.alpha=p.baseAlpha+0.45;p.pl--;if(p.pl<=0){p.pulsing=false;p.pt=150+Math.random()*500;}}
+        else{p.pt--;if(p.pt<=0){p.pulsing=true;p.pl=6+Math.floor(Math.random()*12);}}
+        if(p.y<vt||p.y>vb)continue;
+        const a=Math.max(0,Math.min(1,p.alpha)),[r,g,b]=p.rgb,s=p.size,dy=p.y-sy;
+        ctx.save();
+        if(p.type===0){ctx.fillStyle='rgba('+r+','+g+','+b+','+a+')';ctx.fillRect(p.x-s/2,dy-s/2,s,s);}
+        else if(p.type===1){ctx.fillStyle='rgba('+r+','+g+','+b+','+a+')';ctx.translate(p.x,dy);ctx.rotate(Math.PI/4);ctx.fillRect(-s/2,-s/2,s,s);}
+        else if(p.type===2){const ang=Math.atan2(p.vy,p.vx),h=s/2;ctx.strokeStyle='rgba('+r+','+g+','+b+','+a+')';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.x-Math.cos(ang)*h,dy-Math.sin(ang)*h);ctx.lineTo(p.x+Math.cos(ang)*h,dy+Math.sin(ang)*h);ctx.stroke();}
+        else{ctx.fillStyle='rgba('+r+','+g+','+b+','+a+')';ctx.beginPath();ctx.arc(p.x,dy,Math.max(0.5,s),0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba('+r+','+g+','+b+','+(a*0.4)+')';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(p.x-s*2.5,dy);ctx.lineTo(p.x+s*2.5,dy);ctx.moveTo(p.x,dy-s*2.5);ctx.lineTo(p.x,dy+s*2.5);ctx.stroke();}
+        ctx.restore();
+    }
+    requestAnimationFrame(drawParticles);
+}
+drawParticles();
+</script>
+</body>
+</html>

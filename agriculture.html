@@ -770,59 +770,159 @@
 <script>
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-function makeStages(c,d){const s=[];let cMin=0,cMax=0;for(let i=1;i<=c;i++){cMin+=d*24-12;cMax+=d*24+12;let m='growth';if(i===c-1)m='mature';else if(i===c)m='first harvest · seed-bearing';s.push({check:i,stage:d+' days ±12h',window:(cMin/24).toFixed(1)+' days — '+(cMax/24).toFixed(1)+' days',milestone:m});}return s;}
+/* ============================================================
+   DATA LAYER — edit this part, ignore everything below
+   ============================================================ */
+
+// Turns month arrays into the calendar object automatically
+function buildCal(best,sow,risk){
+    const c={};
+    MONTHS.forEach(m=>{
+        if(best.includes(m))c[m]='best';
+        else if(risk.includes(m))c[m]='risk';
+        else if(sow.includes(m))c[m]='sow';
+        else c[m]='off';
+    });
+    return c;
+}
+
+// Generates growth stage array from count + days per stage
+function makeStages(count,days){
+    const s=[];let cMin=0,cMax=0;
+    for(let i=1;i<=count;i++){
+        cMin+=days*24-12;cMax+=days*24+12;
+        let m='growth';
+        if(i===count-1)m='mature';
+        else if(i===count)m='first harvest · seed-bearing';
+        s.push({check:i,stage:days+' days ±12h',window:(cMin/24).toFixed(1)+' days — '+(cMax/24).toFixed(1)+' days',milestone:m});
+    }
+    return s;
+}
+
+// Crop factory — pass in only what's unique, everything else is computed
+function C(opts){
+    const stages=opts.stages||makeStages(opts.count,opts.days);
+    const last=stages[stages.length-1];
+    const seedName=opts.seedName||opts.name;
+    const minW=Array.isArray(opts.water)?opts.water.join(' → '):opts.water;
+    const baseY=Array.isArray(opts.yield)?opts.yield.join('–'):opts.yield;
+    const capY=Array.isArray(opts.cap)?opts.cap.join('–'):opts.cap;
+    return{
+        id:opts.id,
+        name:opts.name,
+        tags:opts.tags||['Vegetable / field crop'],
+        sowingItem:seedName+' Seeds · '+(opts.seeds||5),
+        firstHarvest:last.window,
+        seedBearing:last.window,
+        growthStates:stages.length+' · 1–'+stages.length,
+        minWater:minW,
+        baseYield:baseY,
+        adjustedCap:capY,
+        scytheCondition:opts.scythe||'not safe to scythe',
+        badMonthHardiness:opts.hardy||'—',
+        rotTimer:opts.rot,
+        bestMonths:opts.best||[],
+        sowMonths:opts.sow||[],
+        riskMonths:opts.risk||[],
+        stages:stages,
+        cal:buildCal(opts.best||[],opts.sow||[],opts.risk||[])
+    };
+}
+
+// ─── CROP DEFINITIONS ───
+// Only write what makes each crop different.
+// Everything else (cal, stages, windows, formatting) is automatic.
 
 const CROPS=[
-    {id:'strawberry',name:'Strawberry',tags:['Herb / flower','regrows to stage 2'],sowingItem:'Strawberry Seeds · 1',firstHarvest:'87 days–93 days',seedBearing:'87 days–93 days',growthStates:'7 · 1–7',minWater:'80 → 80',baseYield:'4–6',adjustedCap:'8–14',scytheCondition:'not safe to scythe',badMonthHardiness:'—',rotTimer:'7.5 days',bestMonths:['Mar'],sowMonths:['Feb','Mar','Apr'],riskMonths:['Apr'],stages:[{check:1,stage:'15 days ±12h',window:'14.5 days — 15.5 days',milestone:'growth'},{check:2,stage:'15 days ±12h',window:'29 days — 31 days',milestone:'growth'},{check:3,stage:'15 days ±12h',window:'43.5 days — 46.5 days',milestone:'growth'},{check:4,stage:'15 days ±12h',window:'58 days — 62 days',milestone:'growth'},{check:5,stage:'15 days ±12h',window:'72.5 days — 77.5 days',milestone:'mature'},{check:6,stage:'15 days ±12h',window:'87 days — 93 days',milestone:'first harvest · seed-bearing'}],cal:{Jan:'off',Feb:'sow',Mar:'best',Apr:'risk',May:'off',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
-    {id:'tomato',name:'Tomato',tags:['Vegetable / field crop'],sowingItem:'Tomato Seeds · 5',firstHarvest:'82 days–90 days',seedBearing:'82 days–90 days',growthStates:'6 · 1–6',minWater:'75 → 85',baseYield:'3–5',adjustedCap:'6–10',scytheCondition:'not safe to scythe',badMonthHardiness:'—',rotTimer:'5 days',bestMonths:['Jun','Jul'],sowMonths:['Apr','May','Jul'],riskMonths:['May','Aug'],stages:makeStages(6,14),cal:{Jan:'off',Feb:'off',Mar:'off',Apr:'sow',May:'risk',Jun:'best',Jul:'best',Aug:'risk',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
-    {id:'potato',name:'Potato',tags:['Vegetable / field crop'],sowingItem:'Potato Seeds · 5',firstHarvest:'78 days–84 days',seedBearing:'78 days–84 days',growthStates:'5 · 1–5',minWater:'70 → 75',baseYield:'4–8',adjustedCap:'8–16',scytheCondition:'safe to scythe',badMonthHardiness:'—',rotTimer:'10 days',bestMonths:['Apr','May'],sowMonths:['Mar','Apr'],riskMonths:['Mar'],stages:makeStages(5,16),cal:{Jan:'off',Feb:'off',Mar:'risk',Apr:'best',May:'best',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
-    {id:'cabbage',name:'Cabbage',tags:['Vegetable / field crop','cold hardy'],sowingItem:'Cabbage Seeds · 5',firstHarvest:'58 days–64 days',seedBearing:'58 days–64 days',growthStates:'5 · 1–5',minWater:'65 → 70',baseYield:'2–4',adjustedCap:'4–8',scytheCondition:'safe to scythe',badMonthHardiness:'moderate',rotTimer:'8 days',bestMonths:['Mar','Apr'],sowMonths:['Feb','Mar','Apr'],riskMonths:['Apr'],stages:makeStages(5,12),cal:{Jan:'off',Feb:'sow',Mar:'best',Apr:'best',May:'risk',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
-    {id:'carrot',name:'Carrot',tags:['Vegetable / field crop'],sowingItem:'Carrot Seeds · 5',firstHarvest:'48 days–54 days',seedBearing:'48 days–54 days',growthStates:'5 · 1–5',minWater:'60 → 65',baseYield:'3–5',adjustedCap:'6–10',scytheCondition:'safe to scythe',badMonthHardiness:'—',rotTimer:'12 days',bestMonths:['Apr','May'],sowMonths:['Mar','Apr','May'],riskMonths:['May'],stages:makeStages(5,10),cal:{Jan:'off',Feb:'off',Mar:'sow',Apr:'best',May:'best',Jun:'risk',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
-    {id:'corn',name:'Corn',tags:['Vegetable / field crop'],sowingItem:'Corn Seeds · 5',firstHarvest:'89 days–99 days',seedBearing:'89 days–99 days',growthStates:'7 · 1–7',minWater:'85 → 90',baseYield:'2–4',adjustedCap:'4–8',scytheCondition:'not safe to scythe',badMonthHardiness:'—',rotTimer:'4 days',bestMonths:['Jun','Jul'],sowMonths:['Apr','May','Jun'],riskMonths:['May','Aug'],stages:makeStages(7,13),cal:{Jan:'off',Feb:'off',Mar:'off',Apr:'sow',May:'risk',Jun:'best',Jul:'best',Aug:'risk',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
-    {id:'beans',name:'Beans',tags:['Vegetable / field crop'],sowingItem:'Bean Seeds · 5',firstHarvest:'48 days–54 days',seedBearing:'48 days–54 days',growthStates:'5 · 1–5',minWater:'55 → 60',baseYield:'3–6',adjustedCap:'6–12',scytheCondition:'safe to scythe',badMonthHardiness:'—',rotTimer:'6 days',bestMonths:['May','Jun'],sowMonths:['Apr','May','Jun'],riskMonths:['Jun'],stages:makeStages(5,10),cal:{Jan:'off',Feb:'off',Mar:'off',Apr:'sow',May:'best',Jun:'best',Jul:'risk',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
-    {id:'lettuce',name:'Lettuce',tags:['Vegetable / field crop','cold hardy'],sowingItem:'Lettuce Seeds · 5',firstHarvest:'30 days–34 days',seedBearing:'30 days–34 days',growthStates:'4 · 1–4',minWater:'50 → 55',baseYield:'1–3',adjustedCap:'2–6',scytheCondition:'safe to scythe',badMonthHardiness:'high',rotTimer:'3 days',bestMonths:['Mar','Apr'],sowMonths:['Feb','Mar','Apr'],riskMonths:['Apr'],stages:makeStages(4,8),cal:{Jan:'off',Feb:'sow',Mar:'best',Apr:'best',May:'risk',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
-    {id:'broccoli',name:'Broccoli',tags:['Vegetable / field crop','cold hardy'],sowingItem:'Broccoli Seeds · 5',firstHarvest:'64 days–72 days',seedBearing:'64 days–72 days',growthStates:'6 · 1–6',minWater:'65 → 70',baseYield:'2–4',adjustedCap:'4–8',scytheCondition:'safe to scythe',badMonthHardiness:'moderate',rotTimer:'5 days',bestMonths:['Mar','Apr'],sowMonths:['Feb','Mar'],riskMonths:['Apr'],stages:makeStages(6,11),cal:{Jan:'off',Feb:'sow',Mar:'best',Apr:'best',May:'risk',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
-    {id:'watermelon',name:'Watermelon',tags:['Vegetable / field crop'],sowingItem:'Watermelon Seeds · 5',firstHarvest:'94 days–106 days',seedBearing:'94 days–106 days',growthStates:'8 · 1–8',minWater:'90 → 95',baseYield:'1–2',adjustedCap:'2–4',scytheCondition:'not safe to scythe',badMonthHardiness:'—',rotTimer:'8 days',bestMonths:['Jul','Aug'],sowMonths:['May','Jun','Jul'],riskMonths:['Jun','Aug'],stages:makeStages(8,12),cal:{Jan:'off',Feb:'off',Mar:'off',Apr:'off',May:'sow',Jun:'risk',Jul:'best',Aug:'best',Sep:'risk',Oct:'off',Nov:'off',Dec:'off'}},
-    {id:'squash',name:'Squash',tags:['Vegetable / field crop'],sowingItem:'Squash Seeds · 5',firstHarvest:'64 days–72 days',seedBearing:'64 days–72 days',growthStates:'6 · 1–6',minWater:'75 → 80',baseYield:'2–4',adjustedCap:'4–8',scytheCondition:'not safe to scythe',badMonthHardiness:'—',rotTimer:'10 days',bestMonths:['Jun','Jul'],sowMonths:['Apr','May','Jun'],riskMonths:['May'],stages:makeStages(6,11),cal:{Jan:'off',Feb:'off',Mar:'off',Apr:'sow',May:'risk',Jun:'best',Jul:'best',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}},
-    {id:'radish',name:'Radish',tags:['Vegetable / field crop'],sowingItem:'Radish Seeds · 5',firstHarvest:'16 days–20 days',seedBearing:'16 days–20 days',growthStates:'3 · 1–3',minWater:'40 → 45',baseYield:'2–4',adjustedCap:'4–8',scytheCondition:'safe to scythe',badMonthHardiness:'—',rotTimer:'5 days',bestMonths:['Apr'],sowMonths:['Mar','Apr','May'],riskMonths:['May'],stages:makeStages(3,6),cal:{Jan:'off',Feb:'off',Mar:'sow',Apr:'best',May:'risk',Jun:'off',Jul:'off',Aug:'off',Sep:'off',Oct:'off',Nov:'off',Dec:'off'}}
+
+    C({id:'strawberry',name:'Strawberry',seedName:'Strawberry',seeds:1,
+       tags:['Herb / flower','regrows to stage 2'],
+       count:6,days:15,rot:'7.5 days',
+       water:80,yield:[4,6],cap:[8,14],
+       best:['Mar'],sow:['Feb','Mar','Apr'],risk:['Apr']}),
+
+    C({id:'tomato',name:'Tomato',
+       count:6,days:14,rot:'5 days',
+       water:[75,85],yield:[3,5],cap:[6,10],
+       best:['Jun','Jul'],sow:['Apr','May','Jul'],risk:['May','Aug']}),
+
+    C({id:'potato',name:'Potato',scythe:'safe to scythe',
+       count:5,days:16,rot:'10 days',
+       water:[70,75],yield:[4,8],cap:[8,16],
+       best:['Apr','May'],sow:['Mar','Apr'],risk:['Mar']}),
+
+    C({id:'cabbage',name:'Cabbage',hardy:'moderate',scythe:'safe to scythe',
+       count:5,days:12,rot:'8 days',
+       water:[65,70],yield:[2,4],cap:[4,8],
+       best:['Mar','Apr'],sow:['Feb','Mar','Apr'],risk:['Apr']}),
+
+    C({id:'carrot',name:'Carrot',scythe:'safe to scythe',
+       count:5,days:10,rot:'12 days',
+       water:[60,65],yield:[3,5],cap:[6,10],
+       best:['Apr','May'],sow:['Mar','Apr','May'],risk:['May']}),
+
+    C({id:'corn',name:'Corn',
+       count:7,days:13,rot:'4 days',
+       water:[85,90],yield:[2,4],cap:[4,8],
+       best:['Jun','Jul'],sow:['Apr','May','Jun'],risk:['May','Aug']}),
+
+    C({id:'beans',name:'Beans',scythe:'safe to scythe',
+       count:5,days:10,rot:'6 days',
+       water:[55,60],yield:[3,6],cap:[6,12],
+       best:['May','Jun'],sow:['Apr','May','Jun'],risk:['Jun']}),
+
+    C({id:'lettuce',name:'Lettuce',hardy:'high',scythe:'safe to scythe',
+       count:4,days:8,rot:'3 days',
+       water:[50,55],yield:[1,3],cap:[2,6],
+       best:['Mar','Apr'],sow:['Feb','Mar','Apr'],risk:['Apr']}),
+
+    C({id:'broccoli',name:'Broccoli',hardy:'moderate',scythe:'safe to scythe',
+       count:6,days:11,rot:'5 days',
+       water:[65,70],yield:[2,4],cap:[4,8],
+       best:['Mar','Apr'],sow:['Feb','Mar'],risk:['Apr']}),
+
+    C({id:'watermelon',name:'Watermelon',
+       count:8,days:12,rot:'8 days',
+       water:[90,95],yield:[1,2],cap:[2,4],
+       best:['Jul','Aug'],sow:['May','Jun','Jul'],risk:['Jun','Aug']}),
+
+    C({id:'squash',name:'Squash',
+       count:6,days:11,rot:'10 days',
+       water:[75,80],yield:[2,4],cap:[4,8],
+       best:['Jun','Jul'],sow:['Apr','May','Jun'],risk:['May']}),
+
+    C({id:'radish',name:'Radish',scythe:'safe to scythe',
+       count:3,days:6,rot:'5 days',
+       water:[40,45],yield:[2,4],cap:[4,8],
+       best:['Apr'],sow:['Mar','Apr','May'],risk:['May']})
+
 ];
+
+/* ============================================================
+   LOGIC LAYER — you almost never need to touch this
+   ============================================================ */
 
 let focusMonth=null,selectedCropId=null,activeTab='calendar';
 
-/* --- Tabs --- */
 document.querySelectorAll('.db-tab').forEach(b=>{
     b.addEventListener('click',function(){const id=this.dataset.tab;if(id===activeTab)return;activeTab=id;document.querySelectorAll('.db-tab').forEach(t=>{t.classList.remove('active');t.setAttribute('aria-selected','false');});document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));this.classList.add('active');this.setAttribute('aria-selected','true');document.getElementById('panel-'+id).classList.add('active');});
 });
 
-/* --- Focus Month: inline row + persistent strip --- */
 const monthRow=document.getElementById('month-row');
 const focusStrip=document.getElementById('focus-strip');
 
 MONTHS.forEach(m=>{
-    const b=document.createElement('button');
-    b.className='month-pick';
-    b.textContent=m;
-    b.setAttribute('role','option');
-    b.addEventListener('click',()=>setFocusMonth(m));
+    const b=document.createElement('button');b.className='month-pick';b.textContent=m;
+    b.setAttribute('role','option');b.addEventListener('click',()=>setFocusMonth(m));
     monthRow.appendChild(b);
 });
 
 function getCropStatus(c,m){if(c.bestMonths.includes(m))return'best';if(c.riskMonths.includes(m))return'risk';if(c.sowMonths.includes(m))return'sow';return'off';}
 
 function setFocusMonth(m){
-    if(focusMonth===m){
-        focusMonth=null;
-        monthRow.querySelectorAll('.month-pick').forEach(b=>b.classList.remove('active'));
-        focusStrip.classList.remove('visible');
-    } else {
-        focusMonth=m;
-        monthRow.querySelectorAll('.month-pick').forEach(b=>b.classList.toggle('active',b.textContent===m));
-        updateFocusCats();
-        focusStrip.classList.add('visible');
-    }
-    renderCalendar();
-    renderSidebar();
-    if(selectedCropId)renderCropDetail(selectedCropId);
+    if(focusMonth===m){focusMonth=null;monthRow.querySelectorAll('.month-pick').forEach(b=>b.classList.remove('active'));focusStrip.classList.remove('visible');}
+    else{focusMonth=m;monthRow.querySelectorAll('.month-pick').forEach(b=>b.classList.toggle('active',b.textContent===m));updateFocusCats();focusStrip.classList.add('visible');}
+    renderCalendar();renderSidebar();if(selectedCropId)renderCropDetail(selectedCropId);
 }
 
 function updateFocusCats(){
@@ -833,7 +933,6 @@ function updateFocusCats(){
     Object.entries(g).forEach(([k,arr])=>{els[k].innerHTML=arr.length?arr.map(n=>'<span class="focus-cat-item">'+n+'</span>').join(''):'<span class="focus-empty">None</span>';});
 }
 
-/* --- Calendar --- */
 function renderCalendar(){
     const g=document.getElementById('calendar-grid');g.innerHTML='';
     const c=document.createElement('div');c.className='cal-head corner';c.textContent='CROP';g.appendChild(c);
@@ -845,7 +944,6 @@ function renderCalendar(){
 }
 renderCalendar();
 
-/* --- Crop Sidebar --- */
 function renderSidebar(){
     const sb=document.getElementById('crop-sidebar');sb.innerHTML='';
     CROPS.forEach(crop=>{
@@ -860,7 +958,6 @@ function renderSidebar(){
 function selectCrop(id){selectedCropId=id;renderSidebar();renderCropDetail(id);}
 renderSidebar();
 
-/* --- Crop Detail --- */
 function renderCropDetail(id){
     const panel=document.getElementById('crop-info-panel');const crop=CROPS.find(c=>c.id===id);
     if(!crop){panel.innerHTML='<div class="crop-empty">Select a crop from the list</div>';return;}
@@ -869,7 +966,6 @@ function renderCropDetail(id){
     function mp(ms,cls){return ms.map(m=>'<span class="month-pill '+cls+'">'+m+'</span>').join(' ');}
     function mc(m){if(m.includes('harvest'))return'mile-harvest';if(m.includes('mature'))return'mile-mature';return'mile-growth';}
     let sR='';crop.stages.forEach(s=>{sR+='<tr><td class="stage-check">'+s.check+'</td><td class="stage-dur">'+s.stage+'</td><td class="stage-window">'+s.window+'</td><td class="stage-mile '+mc(s.milestone)+'">'+s.milestone+'</td></tr>';});
-
     panel.innerHTML=
         '<div class="crop-detail-header"><img class="crop-detail-img" src="images/'+crop.id+'.png" alt="'+crop.name+'" onerror="this.style.background=\'var(--bg-inset)\'"><div><div class="crop-detail-name">'+crop.name+'</div><div class="crop-detail-tags">'+tagsH+'</div></div></div>'+
         '<div class="info-section"><div class="info-two-col">'+
@@ -904,7 +1000,7 @@ function renderCropDetail(id){
 }
 
 /* ============================================================
-   PARTICLES
+   PARTICLES — unchanged
    ============================================================ */
 const isMobile=window.innerWidth<768;
 const canvas=document.getElementById('particle-canvas');

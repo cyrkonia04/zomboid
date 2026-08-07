@@ -517,14 +517,62 @@
         }
 
         .hub-footer {
-            text-align: center; margin-top: 4rem; padding-top: 2rem;
+            margin-top: 4rem;
+            padding-top: 2rem;
             border-top: 1px solid var(--border-dim);
-            font-family: 'Rajdhani', sans-serif; font-size: 0.75rem;
-            font-weight: 500; color: var(--text-muted);
-            letter-spacing: 0.08em; opacity: 0.5;
+            text-align: center;
         }
-        .hub-footer a { color: var(--text-muted); border-bottom: 1px dashed var(--border-subtle); }
-        .hub-footer a:hover { color: var(--hub-accent); border-bottom-color: var(--hub-accent); }
+
+        .footer-attribution {
+            margin-bottom: 1.2rem;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px dashed var(--border-subtle);
+        }
+
+        .attr-line {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.03em;
+            line-height: 1.6;
+            margin-bottom: 0.3rem;
+        }
+
+        .attr-sub {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            opacity: 0.7;
+        }
+
+        .footer-attribution a {
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .footer-attribution a:hover {
+            color: var(--hub-accent);
+            border-bottom-color: var(--hub-accent);
+        }
+
+        .footer-credit {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--text-dim);
+            letter-spacing: 0.08em;
+            opacity: 0.5;
+        }
+
+        .footer-credit a {
+            color: var(--text-dim);
+            border-bottom: 1px dashed var(--border-subtle);
+        }
+
+        .footer-credit a:hover {
+            color: var(--hub-accent);
+            border-bottom-color: var(--hub-accent);
+        }
 
         .skill-card:focus-visible {
             outline: none;
@@ -749,7 +797,13 @@
         </section>
 
         <footer class="hub-footer">
-            web woven by <a href="https://cyrkonia04.com" target="_blank" rel="noopener noreferrer">cyrko</a>
+            <div class="footer-attribution">
+                <p class="attr-line">Project Zomboid is developed by <a href="https://projectzomboid.com/" target="_blank" rel="noopener noreferrer">The Indie Stone</a>. This is an unofficial fan-made database for non-commercial purposes.</p>
+                <p class="attr-line attr-sub">Content is created under the <a href="https://projectzomboid.com/blog/support/terms-conditions/" target="_blank" rel="noopener noreferrer">Indie Stone Terms &amp; Conditions</a>. All in-game assets, names, and imagery are property of The Indie Stone.</p>
+            </div>
+            <div class="footer-credit">
+                web woven by <a href="https://cyrkonia04.com" target="_blank" rel="noopener noreferrer">cyrko</a>
+            </div>
         </footer>
 
     </div>
